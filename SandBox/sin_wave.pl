@@ -27,36 +27,47 @@ printf "cycle=%f, dt=0x%08X\n", $samples_per_cycle, $dt;
     return sub {
         my $mod = shift;
         my $ret = $wave_table[($t >> 16)];
-        $t = ( ($t + $dt + $mod) & 0x3FFFFFF );
+        $t = ( ($t + (($dt * (0x10000 + $mod)) >> 16)) & 0x3FFFFFF );
         return $ret;
     };
 }
 
 my $sample_rate = 44100;
-my $osc = create_osc( $sample_rate, 440 );
-
-my ( $frames_per_buffer, $stream_flags ) = ( 512, undef );
-my $api = Audio::PortAudio::default_host_api();
-printf STDERR "Going to play via %s\nCtrl+c to stop...", $api->name;
-my $device = $api->default_output_device;
-my $stream = $device->open_write_stream( {
-        channel_count => 1, # 1:mono, 2:stereo
-        sample_format => 'int16' #  'float32', 'int16', 'int32', 'int24', 'int8', 'uint8'
-    },
+play(
     $sample_rate,
-    $frames_per_buffer,
-    $stream_flags,
-);
+    create_osc($sample_rate, 440),
+    sub { 0; } );
 
-# Infinite loop...
-while (1) {
-    my $wa = $stream->write_available;
-    my @buffer_ary = map {
-        my $vol = $osc->( 0 );
-        ( $vol < -32767 ) ? -32767 : ((32767 < $vol) ? 32767 : $vol);
-    } (0..($wa - 1));
-    my $buffer = pack("s*", @buffer_ary);
-    $stream->write($buffer);
+sub play {
+    use integer;
+
+    my $sample_rate = shift;
+    my $osc = shift;
+    my $mod = shift;
+
+    my ( $frames_per_buffer, $stream_flags ) = ( 512, undef );
+    my $api = Audio::PortAudio::default_host_api();
+    printf STDERR "Going to play via %s\nCtrl+c to stop...", $api->name;
+    my $device = $api->default_output_device;
+    my $stream = $device->open_write_stream( {
+            channel_count => 1, # 1:mono, 2:stereo
+            sample_format => 'int16' #  'float32', 'int16', 'int32', 'int24', 'int8', 'uint8'
+        },
+        $sample_rate,
+        $frames_per_buffer,
+        $stream_flags,
+    );
+
+    # Infinite loop...
+    while (1) {
+        my $wa = $stream->write_available;
+        my @buffer_ary = map {
+            my $vol = $osc->( $mod->(0) );
+            ( $vol < -32767 ) ? -32767 : ((32767 < $vol) ? 32767 : $vol);
+        } (0..($wa - 1));
+        my $buffer = pack("s*", @buffer_ary);
+        $stream->write($buffer);
+    }
 }
 
 __END__

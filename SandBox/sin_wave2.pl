@@ -3,114 +3,60 @@ use warnings;
 use Audio::PortAudio;
 use Math::Trig qw( pi );
 
-# ノイズの初期化
-srand( 2 ); # 好みの音が得られる乱数Seedで固定
-my @noise = map { rand( 2.0 ) - 1.0; } 1..1024;
-
-my %func_table = (
-    'pulse' => sub { # 矩形波
-        return ( $_[0] < 0.5 ) ? -1.0 : 1.0;
-    },
-    'sin'   => sub { # サイン波（正弦波）
-        return sin( 2.0 * pi() * $_[0] );
-    },
-    'saw'   => sub { # のこぎり波
-        return ( 2.0 * $_[0] ) - 1.0;
-    },
-    'tri'   => sub { # 三角波
-        if ( $_[0] < 0.5 ) {
-            # -1.0 -> +1.0
-            return -1.0 + ( 4.0 * $_[0] );
-        }
-        else {
-            # +1.0 -> -1.0
-            return 1.0 - ( 4.0 * ($_[0] - 0.5) );
-        }
-    },
-    'noise' => sub { # ノイズ
-        if ( $_[0] < 1.0 ) {
-            my $idx = int( $_[0] * scalar(@noise) );
-            return $noise[$idx];
-        }
-        else {
-            return 0.0;
-        }
+my $table_size = 1024;
+my @wave_table = map {
+    my $tmp = sin( 2.0 * pi() * ($_ / $table_size) );
+    if ( $tmp < 0.0 ) {
+        int( ($tmp * 0x10000) - 0.5 );
     }
-);
+    else {
+        int( ($tmp * 0x10000) + 0.5 );
+    }
+} 0..($table_size - 1);
 
-# 種類を指定して、波形を生成する関数を返す
-sub create_mod_func {
-    my $func = $func_table{$_[0]} or die;
-    return $func;
-}
-
-# 任意のパラメータで波形を生成する関数を返す
-sub create_modulator {
+sub create_osc {
     my $samples_per_sec = shift;
-    my $arg_ref = shift;
+    my $freq = shift;
 
-    my $freq = $arg_ref->{freq};
-    my $osc_func = create_mod_func( $arg_ref->{waveform} );
-    my $t = 0.0;
     my $samples_per_cycle = $samples_per_sec / $freq;
+    my $t = 0;
+    my $dt = int( ($table_size / $samples_per_cycle) * 0x10000 ); # u10.16
+
+printf "cycle=%f, dt=0x%08X\n", $samples_per_cycle, $dt;
+
     return sub {
         my $mod = shift;
-        my $ret = $osc_func->(
-            $t / $samples_per_cycle
-        );
-
-        my $dt = 1.0 + $mod;
-        if ( 0.0 < $dt ) {
-            $t += $dt;
-            while ( $samples_per_cycle <= $t ) {
-                $t -= $samples_per_cycle;
-            }
-        }
-
+        my $ret = $wave_table[($t >> 16)];
+        $t = ( ($t + (($dt * (0x10000 + $mod)) >> 16)) & 0x3FFFFFF );
         return $ret;
     };
 }
 
 my $sample_rate = 44100;
-my ( $frames_per_buffer, $stream_flags ) = ( 1024, undef );
+my $osc = create_osc( $sample_rate, 440 );
+my $mod = create_osc( $sample_rate, 2 );
+
+my ( $frames_per_buffer, $stream_flags ) = ( 512, undef );
 my $api = Audio::PortAudio::default_host_api();
 printf STDERR "Going to play via %s\nCtrl+c to stop...", $api->name;
 my $device = $api->default_output_device;
 my $stream = $device->open_write_stream( {
         channel_count => 1, # 1:mono, 2:stereo
-        sample_format => 'float32'
+        sample_format => 'int16' #  'float32', 'int16', 'int32', 'int24', 'int8', 'uint8'
     },
     $sample_rate,
     $frames_per_buffer,
     $stream_flags,
 );
 
-# 440Hzのサイン波を生成する例
-my $osc = create_modulator(
-    $sample_rate,                   # サンプリング周波数
-    {
-        freq => 440,     # 周波数
-        waveform => 'sin'           # 波形の種類
-    }
-);
-
-# モジュレーション
-my $mod = create_modulator(
-    $sample_rate,                   # サンプリング周波数
-    {
-        freq => 2,                  # 周波数
-        waveform => 'saw'           # 波形の種類
-    }
-);
-
 # Infinite loop...
-my $i = 0.0;
 while (1) {
     my $wa = $stream->write_available;
     my @buffer_ary = map {
-        $osc->( $mod->(0) * 0.1 );
+        my $vol = $osc->( $mod->(0) );
+        ( $vol < -32767 ) ? -32767 : ((32767 < $vol) ? 32767 : $vol);
     } (0..($wa - 1));
-    my $buffer = pack("f*", @buffer_ary);
+    my $buffer = pack("s*", @buffer_ary);
     $stream->write($buffer);
 }
 

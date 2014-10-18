@@ -1,6 +1,6 @@
 # NAME
 
-Cassis - It's new $module
+Cassis - Synthesizer modules
 
 # SYNOPSIS
 
@@ -8,7 +8,7 @@ Cassis - It's new $module
 
 # DESCRIPTION
 
-Cassis is ...
+    Modules for generating a short sound.
 
 # LICENSE
 

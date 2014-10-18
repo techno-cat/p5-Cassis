@@ -3,6 +3,10 @@ package Cassis::Iir2;
 use strict;
 use warnings;
 use Math::Trig qw(pi tan);
+use constant CUTOFF_MIN => 0.0;
+use constant CUTOFF_MAX => 0.5;
+
+our $Q_MIN = 1.0 / sqrt(2.0);
 
 sub new {
     my $class = shift;
@@ -11,9 +15,16 @@ sub new {
     if ( not exists $args{cutoff} ) { die 'cutoff parameter is required.'; }
     if ( not exists $args{q}      ) { die 'q parameter is required.';      }
 
-    ( $args{z_m1}, $args{z_m2} ) = ( .0, .0 );
+    my ( $cutoff, $q ) = ( $args{cutoff}, $args{q} );
+    $cutoff = ( $cutoff < CUTOFF_MIN ) ? CUTOFF_MIN : ((CUTOFF_MAX < $cutoff) ? CUTOFF_MAX : $cutoff);
+    $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
 
-    bless \%args, $class;
+    bless {
+        cutoff => $cutoff,
+        q => $q,
+        z_m1 => 0.0,
+        z_m2 => 0.0
+    }, $class;
 }
 
 sub lpf {
@@ -21,18 +32,47 @@ sub lpf {
     my %args = @_;
 
     if ( not exists $args{src} ) { die 'src parameter is required.'; }
-    my @mod = ( exists $args{mod} ) ? @{$args{mod}} : ();
 
-    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
     my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
 
-    my @dst = map {
-        my $new_cutoff = $cutoff + ( (@mod) ? shift @mod : 0 );
-        $new_cutoff = ( $new_cutoff < .0 ) ? .0 : ((.5 < $new_cutoff) ? .5 : $new_cutoff);
-        my $fc = tan(pi * $new_cutoff) / (2.0 * pi);
+    my @dst = ();
+    if ( exists $args{mod} ) {
+        my @mod_cutoff = ( exists $args{mod}->{cutoff} ) ? @{$args{mod}->{cutoff}} : ();
+        my @mod_q = ( exists $args{mod}->{q} ) ? @{$args{mod}->{q}} : ();
+
+        @dst = map {
+            my $cutoff = $self->{cutoff} + ( (@mod_cutoff) ? shift @mod_cutoff : 0.0 );
+            $cutoff = ( $cutoff < CUTOFF_MIN ) ? CUTOFF_MIN : ((CUTOFF_MAX < $cutoff) ? CUTOFF_MAX : $cutoff);
+            my $q = $self->{q} + ( (@mod_q) ? shift @mod_q : 0.0 );
+            $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
+
+            my $fc = tan(pi * $cutoff) / (2.0 * pi);
+            my $_2_pi_fc = 2.0 * pi * $fc;
+            my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
+            my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
+
+            my $b = $_4_pi_pi_fc_fc / $d;
+            #my $b0 = $_4_pi_pi_fc_fc / $d;
+            #my $b1 = (2.0 * $_4_pi_pi_fc_fc) / $d;
+            #my $b2 = $_4_pi_pi_fc_fc / $d;
+            my $a1 = ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d;
+            my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
+
+            my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
+            #my $ret = ($z_m2 * $b2) + ($z_m1 * $b1) + ($in * $b0);
+            my $ret = ($z_m2 + ($z_m1 * 2.0) + $in) * $b;
+            ( $z_m2, $z_m1 ) = ( $z_m1, $in );
+
+            $ret;
+        } @{$args{src}};
+    }
+    else {
+        my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
+
+        my $fc = tan(pi * $cutoff) / (2.0 * pi);
         my $_2_pi_fc = 2.0 * pi * $fc;
         my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
-        my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc; # 各係数の分母
+        my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
 
         my $b = $_4_pi_pi_fc_fc / $d;
         #my $b0 = $_4_pi_pi_fc_fc / $d;
@@ -41,13 +81,14 @@ sub lpf {
         my $a1 = ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d;
         my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
 
-        my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
-        #my $ret = ($z_m2 * $b2) + ($z_m1 * $b1) + ($in * $b0);
-        my $ret = ($z_m2 + ($z_m1 * 2.0) + $in) * $b;
-        ( $z_m2, $z_m1 ) = ( $z_m1, $in );
-
-        $ret;
-    } @{$args{src}};
+        @dst = map {
+            my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
+            #my $ret = ($z_m2 * $b2) + ($z_m1 * $b1) + ($in * $b0);
+            my $ret = ($z_m2 + ($z_m1 * 2.0) + $in) * $b;
+            ( $z_m2, $z_m1 ) = ( $z_m1, $in );
+            $ret;
+        } @{$args{src}};
+    }
 
     ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
 
@@ -70,7 +111,7 @@ Cassis::Iir2 - Second-order IIR digital filter
     use Math::Trig ':pi';
 
     # Pulse Wave
-    my @src = map { sin((2.0 * pi) * 0.005 * $_) < 0 ? -.5 : +.5; } 0..511;
+    my @src = map { sin((2.0 * pi) * 0.005 * $_) < 0 ? -0.5 : +0.5; } 0..511;
 
     my $cutoff = 0.02;
     my $q = 1.0 / sqrt(2.0);
@@ -80,10 +121,22 @@ Cassis::Iir2 - Second-order IIR digital filter
 
 =head1 DESCRIPTION
 
+    # Cutoff
+    0.0 <= freq. <= 0.5
+
+    # Q
+    our $Q_MIN = 1.0 / sqrt(2.0);
+    $Q_MIN <= Q
+
     # LPF(Low Pass Filter)
 
     my $dst = $filter->lpf( src => \@src );
-    my $dst = $filter->lpf( src => \@src, mod => \@modulation_source );
+    my $dst = $filter->lpf( src => \@src, mod => { cutoff => \@modulation_source } );
+    my $dst = $filter->lpf( src => \@src, mod => { q => \@modulation_source } );
+    my $dst = $filter->lpf( src => \@src, mod => { 
+        cutoff => \@modulation_source,
+        q      => \@modulation_source
+    } );
 
     # HPF(High Pass Filter)
 

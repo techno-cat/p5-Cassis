@@ -5,7 +5,7 @@ use warnings;
 
 our $VERSION = "0.01";
 
-
+use Cassis::Iir2;
 
 1;
 __END__
@@ -14,7 +14,7 @@ __END__
 
 =head1 NAME
 
-Cassis - It's new $module
+Cassis - Synthesizer modules
 
 =head1 SYNOPSIS
 
@@ -22,7 +22,7 @@ Cassis - It's new $module
 
 =head1 DESCRIPTION
 
-Cassis is ...
+    Modules for generating a short sound.
 
 =head1 LICENSE
 

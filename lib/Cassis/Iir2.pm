@@ -121,10 +121,10 @@ Cassis::Iir2 - Second-order IIR digital filter
 
 =head1 DESCRIPTION
 
-    # Cutoff
+    # Cutoff frequency
     0.0 <= freq. <= 0.5
 
-    # Q
+    # Q - Resonance
     our $Q_MIN = 1.0 / sqrt(2.0);
     $Q_MIN <= Q
 

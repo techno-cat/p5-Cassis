@@ -59,9 +59,9 @@ sub lpf {
         my $a1 = ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d;
         my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
 
-        my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
-        #my $ret = ($z_m2 * $b2) + ($z_m1 * $b1) + ($in * $b0);
-        my $ret = ($z_m2 + ($z_m1 * 2.0) + $in) * $b;
+        my $in = $_ - (($a1 * $z_m1) + ($a2 * $z_m2));
+        #my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
+        my $ret = $b * ($in + (2.0 * $z_m1) + $z_m2);
         ( $z_m2, $z_m1 ) = ( $z_m1, $in );
 
         $ret;
@@ -85,6 +85,68 @@ sub calc_lpf_params {
         b0 => $_4_pi_pi_fc_fc / $d,
         b1 => (2.0 * $_4_pi_pi_fc_fc) / $d,
         b2 => $_4_pi_pi_fc_fc / $d,
+        a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+        a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
+    };
+}
+
+sub hpf {
+    my $self = shift;
+    my %args = @_;
+
+    if ( not exists $args{src} ) { die 'src parameter is required.'; }
+
+    my @mod_cutoff = ();
+    my @mod_q = ();
+    if ( exists $args{mod} ) {
+        @mod_cutoff = @{$args{mod}->{cutoff}} if ( exists $args{mod}->{cutoff} );
+        @mod_q = @{$args{mod}->{q}} if ( exists $args{mod}->{q} );
+    }
+
+    my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
+    my @dst = map {
+        my $cutoff = $self->{cutoff} + ( (@mod_cutoff) ? shift @mod_cutoff : 0.0 );
+        $cutoff = ( $cutoff < CUTOFF_MIN ) ? CUTOFF_MIN : ((CUTOFF_MAX < $cutoff) ? CUTOFF_MAX : $cutoff);
+        my $q = $self->{q} + ( (@mod_q) ? shift @mod_q : 0.0 );
+        $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
+
+        my $fc = tan(pi * $cutoff) / (2.0 * pi);
+        my $_2_pi_fc = 2.0 * pi * $fc;
+        my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
+        my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
+
+        #my $b0 =  1.0 / $d;
+        #my $b1 = -2.0 / $d;
+        #my $b2 =  1.0 / $d;
+        my $a1 = ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d;
+        my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
+
+        my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
+        #my $ret = ($z_m2 * $b2) + ($z_m1 * $b1) + ($in * $b0);
+        my $ret = ($in + (-2.0 * $z_m1) + $z_m2) / $d;
+        ( $z_m2, $z_m1 ) = ( $z_m1, $in );
+
+        $ret;
+    } @{$args{src}};
+
+    ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
+
+    return \@dst;
+}
+
+sub calc_hpf_params {
+    my $self = shift;
+    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
+
+    my $fc = tan(pi * $cutoff) / (2.0 * pi);
+    my $_2_pi_fc = 2.0 * pi * $fc;
+    my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
+    my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
+
+    return {
+        b0 =>  1.0 / $d,
+        b1 => -2.0 / $d,
+        b2 =>  1.0 / $d,
         a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
         a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
     };

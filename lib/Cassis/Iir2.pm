@@ -326,13 +326,25 @@ Cassis::Iir2 - Second-order IIR digital filter
 =head1 DESCRIPTION
 
     # Cutoff frequency
+
     0.0 <= freq. <= 0.5
 
     # Q - Resonance
+
     our $Q_MIN = 0.01;
     $Q_MIN <= Q
 
-    # LPF(Low Pass Filter)
+    # Create Filter
+
+    my $cutoff = 0.05;
+    my $q = 1.0 / sqrt(2.0);
+    my $filter = Cassis::Iir2->new( cutoff => $cutoff, q => $q );
+
+    # Simple Filtering
+
+    my $dst = $filter->exec( src => \@src, params => $filter->calc_lpf_params() );
+
+    # With Modulation
 
     my $dst = $filter->lpf( src => \@src );
     my $dst = $filter->lpf( src => \@src, mod => { cutoff => \@modulation_source } );
@@ -342,13 +354,29 @@ Cassis::Iir2 - Second-order IIR digital filter
         q      => \@modulation_source
     } );
 
+    If array length of modulation-source is little than source,
+    0 is using as modulation value.
+
+    # LPF(Low Pass Filter)
+
+    $filter->lpf( src => \@src, mod => {...} ); # with modulation
+    $filter->calc_lpf_params(); # => { b0 => $b0, b1 => $b1, b2 => $b2, a1 => $a1, a2 => $a2 }
+
     # HPF(High Pass Filter)
 
-    Sorry, now working...
+    $filter->hpf( src => \@src, mod => {...} ); # with modulation
+    $filter->calc_hpf_params(); # => { b0 => $b0, b1 => $b1, b2 => $b2, a1 => $a1, a2 => $a2 }
 
     # BPF(Band Pass Filter)
 
-    Sorry, now working...
+    $filter->bpf( src => \@src, mod => {...} ); # with modulation
+    $filter->calc_bpf_params(); # => { b0 => $b0, b1 => $b1, b2 => $b2, a1 => $a1, a2 => $a2 }
+
+    # BEF(Band Elimination Filter)
+
+    $filter->bef( src => \@src, mod => {...} ); # with modulation
+    $filter->calc_bef_params(); # => { b0 => $b0, b1 => $b1, b2 => $b2, a1 => $a1, a2 => $a2 }
+
 
 =head1 LICENSE
 

@@ -6,7 +6,7 @@ use Math::Trig qw(pi tan);
 use constant CUTOFF_MIN => 0.0;
 use constant CUTOFF_MAX => 0.5;
 
-our $Q_MIN = 1.0 / sqrt(2.0);
+our $Q_MIN = 0.01;
 
 sub new {
     my $class = shift;
@@ -142,7 +142,7 @@ Cassis::Iir2 - Second-order IIR digital filter
     0.0 <= freq. <= 0.5
 
     # Q - Resonance
-    our $Q_MIN = 1.0 / sqrt(2.0);
+    our $Q_MIN = 0.01;
     $Q_MIN <= Q
 
     # LPF(Low Pass Filter)

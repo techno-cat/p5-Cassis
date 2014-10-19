@@ -122,7 +122,7 @@ sub hpf {
         my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
 
         my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
-        #my $ret = ($z_m2 * $b2) + ($z_m1 * $b1) + ($in * $b0);
+        #my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
         my $ret = ($in + (-2.0 * $z_m1) + $z_m2) / $d;
         ( $z_m2, $z_m1 ) = ( $z_m1, $in );
 
@@ -185,7 +185,7 @@ sub bpf {
         my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
 
         my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
-        #my $ret = ($z_m2 * $b2) + ($z_m1 * $b1) + ($in * $b0);
+        #my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
         my $ret = $b * ($in - $z_m2);
         ( $z_m2, $z_m1 ) = ( $z_m1, $in );
 

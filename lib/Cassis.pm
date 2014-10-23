@@ -24,6 +24,20 @@ Cassis - Synthesizer modules
 
     Modules for generating a short sound.
 
+=head2 Overview of documentation
+
+=over 4
+
+=item *
+
+Cassis -  This document.
+
+=item *
+
+Cassis::Iir2 - Second-order IIR digital filter.
+
+=back
+
 =head1 LICENSE
 
 Copyright (C) neko.

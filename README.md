@@ -10,6 +10,11 @@ Cassis - Synthesizer modules
 
     Modules for generating a short sound.
 
+## Overview of documentation
+
+- Cassis -  This document.
+- Cassis::Iir2 - Second-order IIR digital filter.
+
 # LICENSE
 
 Copyright (C) neko.

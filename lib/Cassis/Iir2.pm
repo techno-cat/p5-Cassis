@@ -3,9 +3,9 @@ package Cassis::Iir2;
 use strict;
 use warnings;
 use Math::Trig qw(pi tan);
-use constant CUTOFF_MIN => 0.0;
-use constant CUTOFF_MAX => 0.5;
 
+our $CUTOFF_MIN = 0.001;
+our $CUTOFF_MAX = 0.499;
 our $Q_MIN = 0.01;
 
 sub new {
@@ -16,8 +16,20 @@ sub new {
     if ( not exists $args{q}      ) { die 'q parameter is required.';      }
 
     my ( $cutoff, $q ) = ( $args{cutoff}, $args{q} );
-    $cutoff = ( $cutoff < CUTOFF_MIN ) ? CUTOFF_MIN : ((CUTOFF_MAX < $cutoff) ? CUTOFF_MAX : $cutoff);
-    $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
+
+    if ( $cutoff < $CUTOFF_MIN ) {
+        warn "cutoff is clipped. ($cutoff => $CUTOFF_MIN)";
+        $cutoff = $CUTOFF_MIN;
+    }
+    elsif ( $CUTOFF_MAX < $cutoff ) {
+        warn "cutoff is clipped. ($cutoff => $CUTOFF_MAX)";
+        $cutoff = $CUTOFF_MAX;
+    }
+
+    if ( $q < $Q_MIN ) {
+        warn "q is clipped. ($q => $Q_MIN)";
+        $q = $Q_MIN;
+    }
 
     bless {
         cutoff => $cutoff,
@@ -43,7 +55,7 @@ sub lpf {
     my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
     my @dst = map {
         my $cutoff = $self->{cutoff} + ( (@mod_cutoff) ? shift @mod_cutoff : 0.0 );
-        $cutoff = ( $cutoff < CUTOFF_MIN ) ? CUTOFF_MIN : ((CUTOFF_MAX < $cutoff) ? CUTOFF_MAX : $cutoff);
+        $cutoff = ( $cutoff < $CUTOFF_MIN ) ? $CUTOFF_MIN : (($CUTOFF_MAX < $cutoff) ? $CUTOFF_MAX : $cutoff);
         my $q = $self->{q} + ( (@mod_q) ? shift @mod_q : 0.0 );
         $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
 
@@ -106,7 +118,7 @@ sub hpf {
     my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
     my @dst = map {
         my $cutoff = $self->{cutoff} + ( (@mod_cutoff) ? shift @mod_cutoff : 0.0 );
-        $cutoff = ( $cutoff < CUTOFF_MIN ) ? CUTOFF_MIN : ((CUTOFF_MAX < $cutoff) ? CUTOFF_MAX : $cutoff);
+        $cutoff = ( $cutoff < $CUTOFF_MIN ) ? $CUTOFF_MIN : (($CUTOFF_MAX < $cutoff) ? $CUTOFF_MAX : $cutoff);
         my $q = $self->{q} + ( (@mod_q) ? shift @mod_q : 0.0 );
         $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
 
@@ -168,7 +180,7 @@ sub bpf {
     my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
     my @dst = map {
         my $cutoff = $self->{cutoff} + ( (@mod_cutoff) ? shift @mod_cutoff : 0.0 );
-        $cutoff = ( $cutoff < CUTOFF_MIN ) ? CUTOFF_MIN : ((CUTOFF_MAX < $cutoff) ? CUTOFF_MAX : $cutoff);
+        $cutoff = ( $cutoff < $CUTOFF_MIN ) ? $CUTOFF_MIN : (($CUTOFF_MAX < $cutoff) ? $CUTOFF_MAX : $cutoff);
         my $q = $self->{q} + ( (@mod_q) ? shift @mod_q : 0.0 );
         $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
 
@@ -231,7 +243,7 @@ sub bef {
     my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
     my @dst = map {
         my $cutoff = $self->{cutoff} + ( (@mod_cutoff) ? shift @mod_cutoff : 0.0 );
-        $cutoff = ( $cutoff < CUTOFF_MIN ) ? CUTOFF_MIN : ((CUTOFF_MAX < $cutoff) ? CUTOFF_MAX : $cutoff);
+        $cutoff = ( $cutoff < $CUTOFF_MIN ) ? $CUTOFF_MIN : (($CUTOFF_MAX < $cutoff) ? $CUTOFF_MAX : $cutoff);
         my $q = $self->{q} + ( (@mod_q) ? shift @mod_q : 0.0 );
         $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
 
@@ -325,9 +337,11 @@ Cassis::Iir2 - Second-order IIR digital filter
 
 =head1 DESCRIPTION
 
-    # Cutoff frequency
+    # Cutoff parameter
 
-    0.0 <= freq. <= 0.5
+    our $CUTOFF_MIN => 0.001;
+    our $CUTOFF_MAX => 0.499;
+    $CUTOFF_MIN <= Cutoff <= $CUTOFF_MAX
 
     # Q - Resonance
 
@@ -376,7 +390,6 @@ Cassis::Iir2 - Second-order IIR digital filter
 
     $filter->bef( src => \@src, mod => {...} ); # with modulation
     $filter->calc_bef_params(); # => { b0 => $b0, b1 => $b1, b2 => $b2, a1 => $a1, a2 => $a2 }
-
 
 =head1 LICENSE
 

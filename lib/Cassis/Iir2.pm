@@ -15,25 +15,9 @@ sub new {
     if ( not exists $args{cutoff} ) { die 'cutoff parameter is required.'; }
     if ( not exists $args{q}      ) { die 'q parameter is required.';      }
 
-    my ( $cutoff, $q ) = ( $args{cutoff}, $args{q} );
-
-    if ( $cutoff < $CUTOFF_MIN ) {
-        warn "cutoff is clipped. ($cutoff => $CUTOFF_MIN)";
-        $cutoff = $CUTOFF_MIN;
-    }
-    elsif ( $CUTOFF_MAX < $cutoff ) {
-        warn "cutoff is clipped. ($cutoff => $CUTOFF_MAX)";
-        $cutoff = $CUTOFF_MAX;
-    }
-
-    if ( $q < $Q_MIN ) {
-        warn "q is clipped. ($q => $Q_MIN)";
-        $q = $Q_MIN;
-    }
-
     bless {
-        cutoff => $cutoff,
-        q => $q,
+        cutoff => $args{cutoff},
+        q => $args{q},
         z_m1 => 0.0,
         z_m2 => 0.0
     }, $class;
@@ -86,7 +70,7 @@ sub lpf {
 
 sub calc_lpf_params {
     my $self = shift;
-    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
+    my ( $cutoff, $q ) = _clip( $self->{cutoff}, $self->{q} );
 
     my $fc = tan(pi * $cutoff) / (2.0 * pi);
     my $_2_pi_fc = 2.0 * pi * $fc;
@@ -148,7 +132,7 @@ sub hpf {
 
 sub calc_hpf_params {
     my $self = shift;
-    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
+    my ( $cutoff, $q ) = _clip( $self->{cutoff}, $self->{q} );
 
     my $fc = tan(pi * $cutoff) / (2.0 * pi);
     my $_2_pi_fc = 2.0 * pi * $fc;
@@ -211,7 +195,7 @@ sub bpf {
 
 sub calc_bpf_params {
     my $self = shift;
-    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
+    my ( $cutoff, $q ) = _clip( $self->{cutoff}, $self->{q} );
 
     my $fc = tan(pi * $cutoff) / (2.0 * pi);
     my $_2_pi_fc = 2.0 * pi * $fc;
@@ -273,7 +257,7 @@ sub bef {
 
 sub calc_bef_params {
     my $self = shift;
-    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
+    my ( $cutoff, $q ) = _clip( $self->{cutoff}, $self->{q} );
 
     my $fc = tan(pi * $cutoff) / (2.0 * pi);
     my $_2_pi_fc = 2.0 * pi * $fc;
@@ -309,6 +293,26 @@ sub exec {
     ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
 
     return \@dst;
+}
+
+sub _clip {
+    my ( $cutoff, $q ) = @_;
+
+    if ( $cutoff < $CUTOFF_MIN ) {
+        warn "cutoff is clipped. ($cutoff => $CUTOFF_MIN)";
+        $cutoff = $CUTOFF_MIN;
+    }
+    elsif ( $CUTOFF_MAX < $cutoff ) {
+        warn "cutoff is clipped. ($cutoff => $CUTOFF_MAX)";
+        $cutoff = $CUTOFF_MAX;
+    }
+
+    if ( $q < $Q_MIN ) {
+        warn "q is clipped. ($q => $Q_MIN)";
+        $q = $Q_MIN;
+    }
+
+    return ( $cutoff, $q );
 }
 
 1;

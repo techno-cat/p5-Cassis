@@ -10,7 +10,7 @@ my @src = map { 64 < ($_ % 128) ? -1.0 : 1.0 } 0..511;
 
 my $cutoff = 0.05;
 my $q = 1.0 / sqrt(2.0);
-my $th = 1.e-10;
+my $th = 1.0e-10;
 {
     my $f = Cassis::Iir2->new( cutoff => $cutoff, q => $q );
     my $expected = $f->exec( src => \@src, params => $f->calc_lpf_params() );

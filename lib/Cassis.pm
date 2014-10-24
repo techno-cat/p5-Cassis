@@ -30,7 +30,7 @@ Cassis - Synthesizer modules
 
 =item *
 
-Cassis -  This document.
+Cassis - This document.
 
 =item *
 

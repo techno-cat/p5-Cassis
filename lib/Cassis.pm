@@ -6,6 +6,7 @@ use warnings;
 our $VERSION = "0.01";
 
 use Cassis::Iir2;
+use Cassis::File;
 
 1;
 __END__
@@ -35,6 +36,10 @@ Cassis - This document.
 =item *
 
 Cassis::Iir2 - Second-order IIR digital filter.
+
+=item *
+
+Cassis::File - Wave File IO.
 
 =back
 

@@ -16,21 +16,24 @@ __END__
 
 =head1 NAME
 
-Cassis - Synthesizer modules
+Cassis - Synthesizer Modules
 
 =head1 SYNOPSIS
 
     package MySynth;
+    use strict;
+    use warnings;
     use Cassis;
     
     sub new {
         my $class = shift;
         my %args = @_;
     
+        my $fs = ( exists $args{fs} ) ? $args{fs} : 44100;
         bless {
             samples => [],
-            sf      => $args{fs},
-            dco     => Cassis::Dco->new( fs => $args{fs} )
+            sf      => $fs,
+            dco     => Cassis::Dco->new( fs => $fs )
         }, $class;
     }
     
@@ -56,7 +59,7 @@ Cassis - Synthesizer modules
     use strict;
     use warnings;
     
-    my $s = MySynth->new( fs => 44100 );
+    my $s = MySynth->new();
     $s->exec( num => 44100 );
     $s->write( file => 'sample.wav' );
 
@@ -71,6 +74,10 @@ Cassis - Synthesizer modules
 =item *
 
 Cassis - This document.
+
+=item *
+
+Cassis::Dco - Digital Controlled Oscillator.
 
 =item *
 

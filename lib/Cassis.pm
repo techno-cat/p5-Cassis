@@ -5,8 +5,41 @@ use warnings;
 
 our $VERSION = "0.01";
 
+our $SAMPLING_RATE = 44100;
+our $BIT_DEPTH = 16;
+
 use Cassis::Iir2;
 use Cassis::File;
+
+sub new {
+    my $class = shift;
+    my %args = @_;
+
+    bless {
+        samples => ( exists $args{samples} ) ? $args{samples} : [],
+        sf      => ( exists $args{sf} ) ? $args{sf} : $SAMPLING_RATE,
+        bits    => ( exists $args{bits} ) ? $args{bits} : $BIT_DEPTH
+    }, $class;
+}
+
+sub samples {
+    return $_[0]->{samples};
+}
+
+sub append {
+    return push @{$_[0]->{samples}}, @{$_[1]};
+}
+
+sub write {
+    my $self = shift;
+    my %args = @_;
+
+    $args{sf} = $self->{sf};
+    $args{bits} = $self->{bits};
+    $args{channels} = [ $self->{samples} ];
+
+    Cassis::File::write( %args );
+}
 
 1;
 __END__
@@ -20,6 +53,8 @@ Cassis - Synthesizer modules
 =head1 SYNOPSIS
 
     use Cassis;
+
+    now working ...
 
 =head1 DESCRIPTION
 

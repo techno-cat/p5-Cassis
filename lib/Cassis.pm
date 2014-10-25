@@ -5,42 +5,9 @@ use warnings;
 
 our $VERSION = "0.01";
 
-our $SAMPLING_RATE = 44100;
-our $BIT_DEPTH = 16;
-
 use Cassis::Dco;
 use Cassis::Iir2;
 use Cassis::File;
-
-sub new {
-    my $class = shift;
-    my %args = @_;
-
-    bless {
-        samples => ( exists $args{samples} ) ? $args{samples} : [],
-        sf      => ( exists $args{sf} ) ? $args{sf} : $SAMPLING_RATE,
-        bits    => ( exists $args{bits} ) ? $args{bits} : $BIT_DEPTH
-    }, $class;
-}
-
-sub samples {
-    return $_[0]->{samples};
-}
-
-sub append {
-    return push @{$_[0]->{samples}}, @{$_[1]};
-}
-
-sub write {
-    my $self = shift;
-    my %args = @_;
-
-    $args{sf} = $self->{sf};
-    $args{bits} = $self->{bits};
-    $args{channels} = [ $self->{samples} ];
-
-    Cassis::File::write( %args );
-}
 
 1;
 __END__
@@ -53,9 +20,45 @@ Cassis - Synthesizer modules
 
 =head1 SYNOPSIS
 
+    package MySynth;
     use Cassis;
-
-    now working ...
+    
+    sub new {
+        my $class = shift;
+        my %args = @_;
+    
+        bless {
+            samples => [],
+            sf      => $args{fs},
+            dco     => Cassis::Dco->new( fs => $args{fs} )
+        }, $class;
+    }
+    
+    sub exec {
+        my $self = shift;
+        my %args = @_;
+    
+        my $dst = $self->{dco}->exec( num => $args{num} );
+        push @{$self->{samples}}, @{$dst};
+    }
+    
+    sub write {
+        my $self = shift;
+        my %args = @_;
+    
+        $args{sf}       = $self->{sf};
+        $args{channels} = [ $self->{samples} ];
+    
+        Cassis::File::write( %args );
+    }
+    
+    package main;
+    use strict;
+    use warnings;
+    
+    my $s = MySynth->new( fs => 44100 );
+    $s->exec( num => 44100 );
+    $s->write( file => 'sample.wav' );
 
 =head1 DESCRIPTION
 

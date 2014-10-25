@@ -4,7 +4,45 @@ Cassis - Synthesizer modules
 
 # SYNOPSIS
 
+    package MySynth;
     use Cassis;
+    
+    sub new {
+        my $class = shift;
+        my %args = @_;
+    
+        bless {
+            samples => [],
+            sf      => $args{fs},
+            dco     => Cassis::Dco->new( fs => $args{fs} )
+        }, $class;
+    }
+    
+    sub exec {
+        my $self = shift;
+        my %args = @_;
+    
+        my $dst = $self->{dco}->exec( num => $args{num} );
+        push @{$self->{samples}}, @{$dst};
+    }
+    
+    sub write {
+        my $self = shift;
+        my %args = @_;
+    
+        $args{sf}       = $self->{sf};
+        $args{channels} = [ $self->{samples} ];
+    
+        Cassis::File::write( %args );
+    }
+    
+    package main;
+    use strict;
+    use warnings;
+    
+    my $s = MySynth->new( fs => 44100 );
+    $s->exec( num => 44100 );
+    $s->write( file => 'sample.wav' );
 
 # DESCRIPTION
 
@@ -12,8 +50,9 @@ Cassis - Synthesizer modules
 
 ## Overview of documentation
 
-- Cassis -  This document.
+- Cassis - This document.
 - Cassis::Iir2 - Second-order IIR digital filter.
+- Cassis::File - Wave File IO.
 
 # LICENSE
 

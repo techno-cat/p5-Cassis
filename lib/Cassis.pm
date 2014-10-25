@@ -8,6 +8,7 @@ our $VERSION = "0.01";
 our $SAMPLING_RATE = 44100;
 our $BIT_DEPTH = 16;
 
+use Cassis::Dco;
 use Cassis::Iir2;
 use Cassis::File;
 

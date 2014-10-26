@@ -1,8 +1,6 @@
 package Cassis::Dco;
-
 use strict;
 use warnings;
-use Math::Trig ':pi';
 
 our $TUNING = 440.0;
 
@@ -16,7 +14,7 @@ sub new {
         fs => $args{fs},
         t => 0.0,
         voltage => ( exists $args{voltage} ) ? $args{voltage} : 0.0,
-        osc => _osc_sin()
+        custom_osc => ( exists $args{custom_osc} ) ? $args{custom_osc} : sub { return []; }
     }, $class;
 }
 
@@ -35,49 +33,52 @@ sub exec {
     if ( not exists $args{num} ) { die 'num parameter is required.'; }
 
     my ( $t, $v0, $fs ) = ( $self->{t}, $self->{voltage}, $self->{fs} );
-    if ( exists $args{mod} ) {
-        my @mod_v = ( $args{mod}->{voltage} ) ? @{$args{mod}->{voltage}} : ();
-        my @pitch = map {
+    $args{pitch} = [];
+    if ( exists $args{mod_voltage} ) {
+        my @src = ( $args{mod_voltage}->{src} ) ? @{$args{mod_voltage}->{src}} : ();
+        my $depth = ( $args{mod_voltage}->{depth} ) ? $args{mod_voltage}->{depth} : 1.0;
+        push @{$args{pitch}}, map {
             my $ret = $t;
-            my $v = $v0 + ( (@mod_v) ? shift @mod_v : 0 );
+            my $v = $v0 + (((@src) ? shift @src : 0.0) * $depth);
             my $dt = ($TUNING * (2.0 ** $v)) / $fs;
             $t += $dt;
             $ret;
         } 1..$args{num};
-
-        $args{mod}->{pitch} = \@pitch;
     }
     else {
         my $dt = ($TUNING * (2.0 ** $v0)) / $fs;
-        my @pitch = map {
+        push @{$args{pitch}}, map {
             my $ret = $t;
             $t += $dt;
             $ret;
         } 1..$args{num};
-
-        $args{mod} = { pitch => \@pitch };
     }
 
     $self->{t} = $t;
 
-    return $self->{osc}->( %{$args{mod}} );
+    return $self->oscillate( %args );
 }
 
-sub exec_once {
+sub oscillate {
+    my $self = shift;
+    my %args = @_;
 
+    return $self->{custom_osc}->( %args );
 }
 
-sub _osc_sin {
-    return sub {
-        my %args = @_;
-        my $vol = ( $args{vol} ) ? $args{vol} : 1.0;
+package Cassis::Dco::Sin;
+our @ISA = qw(Cassis::Dco);
+use Math::Trig ':pi';
 
-        my @dst = map {
-            sin( 2.0 * pi * $_ ) * $vol;
-        } @{$args{pitch}};
+sub oscillate {
+    my $self = shift;
+    my %args = @_;
 
-        return \@dst;
-    };
+    my @dst = map {
+        sin( 2.0 * pi * $_ );
+    } @{$args{pitch}};
+
+    return \@dst;
 }
 
 1;

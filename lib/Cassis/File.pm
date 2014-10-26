@@ -14,7 +14,7 @@ sub write {
     }
 
     my $raw = ( exists $args{raw} ) ? $args{raw} : 0;
-    my $samples_per_sec = ( exists $args{sf} ) ? $args{sf} : 44100;
+    my $samples_per_sec = ( exists $args{fs} ) ? $args{fs} : 44100;
     my $bits_per_sample = ( exists $args{bits} ) ? $args{bits} : 16;
 
     if ( $bits_per_sample == 8 or $bits_per_sample == 16 ) {

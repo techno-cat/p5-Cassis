@@ -38,7 +38,7 @@ sub exec {
         my @src = ( $args{mod_voltage}->{src} ) ? @{$args{mod_voltage}->{src}} : ();
         my $depth = ( $args{mod_voltage}->{depth} ) ? $args{mod_voltage}->{depth} : 1.0;
         push @{$args{pitch}}, map {
-            my $ret = $t;
+            my $ret = $t - int($t);
             my $v = $v0 + (((@src) ? shift @src : 0.0) * $depth);
             my $dt = ($TUNING * (2.0 ** $v)) / $fs;
             $t += $dt;
@@ -48,7 +48,7 @@ sub exec {
     else {
         my $dt = ($TUNING * (2.0 ** $v0)) / $fs;
         push @{$args{pitch}}, map {
-            my $ret = $t;
+            my $ret = $t - int($t);
             $t += $dt;
             $ret;
         } 1..$args{num};
@@ -76,6 +76,55 @@ sub oscillate {
 
     my @dst = map {
         sin( 2.0 * pi * $_ );
+    } @{$args{pitch}};
+
+    return \@dst;
+}
+
+package Cassis::Dco::Pulse;
+our @ISA = qw(Cassis::Dco);
+
+sub oscillate {
+    my $self = shift;
+    my %args = @_;
+
+    my @dst = map {
+        ( $_ < 0.5 ) ? -1.0 : 1.0;;
+    } @{$args{pitch}};
+
+    return \@dst;
+}
+
+package Cassis::Dco::Saw;
+our @ISA = qw(Cassis::Dco);
+
+sub oscillate {
+    my $self = shift;
+    my %args = @_;
+
+    my @dst = map {
+        ( 2.0 * $_ ) - 1.0;
+    } @{$args{pitch}};
+
+    return \@dst;
+}
+
+package Cassis::Dco::Tri;
+our @ISA = qw(Cassis::Dco);
+
+sub oscillate {
+    my $self = shift;
+    my %args = @_;
+
+    my @dst = map {
+        if ( $_ < 0.5 ) {
+            # -1.0 -> +1.0
+            -1.0 + ( 4.0 * $_ );
+        }
+        else {
+            # +1.0 -> -1.0
+            1.0 - ( 4.0 * ($_ - 0.5) );
+        }
     } @{$args{pitch}};
 
     return \@dst;

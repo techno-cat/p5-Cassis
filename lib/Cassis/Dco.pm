@@ -140,11 +140,71 @@ Cassis::Dco - Digital Controlled Oscillator
 
     use Cassis::Dco;
 
-    ...
+    my $fs = 44100;
+    my $osc = Cassis::Dco::Sin->new( fs => $fs );
+    my $dst = $osc->exec( num => $fs * 2 ); # 2sec
 
 =head1 DESCRIPTION
 
-    ...
+=over
+
+=item new()
+
+    # "fs" is sampling-rate.
+    my $osc = Cassis::Dco::Sin->new( fs => $fs );
+
+    # our $TUNING = 440.0;
+    # frequency = $TUNING * (2 ** voltage);
+    my $osc = Cassis::Dco::Sin->new( fs => $fs, voltage => 1.0 );
+
+=item voltage()
+
+    # Get voltage.
+    my $v = 2.0;
+    $osc->set_voltage( $v );
+
+=item set_voltage()
+
+    # Set voltage.
+    my $v = $osc->voltage();
+
+=item exec()
+
+    # Get osillation result.
+    my $dst = $osc->exec( num => $fs * 2 ); # 2sec
+
+    # Osillate with modulation.
+    my $lfo = Cassis::Dco::Pulse->new( fs => $fs, voltage => -5 ); # Low Frequency Osillator
+    my $dst = $osc->exec(
+        num => $fs * 2,
+        mod_voltage => {
+            src => $lfo->exec( num => $fs * 2 ), depth => 1.0
+        }
+    );
+
+=back
+
+=head2 Oscillation Type
+
+=over
+
+=item Sin Wave
+
+    my $osc = Cassis::Dco::Sin->new( fs => $fs );
+
+=item Pulse Wave
+
+    my $osc = Cassis::Dco::Pulse->new( fs => $fs );
+
+=item Saw Wave
+
+    my $osc = Cassis::Dco::Saw->new( fs => $fs );
+
+=item Tri Wave
+
+    my $osc = Cassis::Dco::Tri->new( fs => $fs );
+
+=back
 
 =head1 LICENSE
 

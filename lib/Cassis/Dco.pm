@@ -13,16 +13,16 @@ sub new {
     bless {
         fs => $args{fs},
         t => 0.0,
-        voltage => ( exists $args{voltage} ) ? $args{voltage} : 0.0
+        pitch => ( exists $args{pitch} ) ? $args{pitch} : 0.0
     }, $class;
 }
 
-sub voltage {
-    $_[0]->{voltage};
+sub pitch {
+    $_[0]->{pitch};
 }
 
-sub set_voltage {
-    $_[0]->{voltage} = $_[1];
+sub set_pitch {
+    $_[0]->{pitch} = $_[1];
 }
 
 sub exec {
@@ -31,31 +31,32 @@ sub exec {
 
     if ( not exists $args{num} ) { die 'num parameter is required.'; }
 
-    my ( $t, $v0, $fs ) = ( $self->{t}, $self->{voltage}, $self->{fs} );
-    $args{pitch} = [];
-    if ( exists $args{mod_voltage} ) {
-        my @src = ( $args{mod_voltage}->{src} ) ? @{$args{mod_voltage}->{src}} : ();
-        my $depth = ( $args{mod_voltage}->{depth} ) ? $args{mod_voltage}->{depth} : 1.0;
-        push @{$args{pitch}}, map {
-            my $ret = $t - int($t);
-            my $v = $v0 + (((@src) ? shift @src : 0.0) * $depth);
-            my $dt = ($TUNING * (2.0 ** $v)) / $fs;
-            $t += $dt;
-            $ret;
+    my @ret = ();
+    my $t = $self->{t};
+    if ( exists $args{mod_pitch} ) {
+        my @src = ( $args{mod_pitch}->{src} ) ? @{$args{mod_pitch}->{src}} : ();
+        my $depth = ( $args{mod_pitch}->{depth} ) ? $args{mod_pitch}->{depth} : 1.0;
+        @ret = map {
+            my $w = $t - int($t);
+            $t += $_;
+            $w;
+        } map {
+            my $pitch = $self->{pitch} + (((@src) ? shift @src : 0.0) * $depth);
+            ($TUNING * (2.0 ** $pitch)) / $self->{fs};
         } 1..$args{num};
     }
     else {
-        my $dt = ($TUNING * (2.0 ** $v0)) / $fs;
-        push @{$args{pitch}}, map {
-            my $ret = $t - int($t);
+        my $dt = ($TUNING * (2.0 ** $self->{pitch})) / $self->{fs};
+        @ret = map {
+            my $w = $t - int($t);
             $t += $dt;
-            $ret;
+            $w;
         } 1..$args{num};
     }
 
     $self->{t} = $t;
 
-    return $self->oscillate( %args );
+    return $self->oscillate( \@ret, args => \%args );
 }
 
 sub oscillate {
@@ -68,11 +69,11 @@ use Math::Trig ':pi';
 
 sub oscillate {
     my $self = shift;
-    my %args = @_;
+    my ( $w, $args ) = @_;
 
     my @dst = map {
         sin( 2.0 * pi * $_ );
-    } @{$args{pitch}};
+    } @{$w};
 
     return \@dst;
 }
@@ -82,11 +83,11 @@ our @ISA = qw(Cassis::Dco);
 
 sub oscillate {
     my $self = shift;
-    my %args = @_;
+    my ( $w, $args ) = @_;
 
     my @dst = map {
         ( $_ < 0.5 ) ? -1.0 : 1.0;;
-    } @{$args{pitch}};
+    } @{$w};
 
     return \@dst;
 }
@@ -96,11 +97,11 @@ our @ISA = qw(Cassis::Dco);
 
 sub oscillate {
     my $self = shift;
-    my %args = @_;
+    my ( $w, $args ) = @_;
 
     my @dst = map {
         ( 2.0 * $_ ) - 1.0;
-    } @{$args{pitch}};
+    } @{$w};
 
     return \@dst;
 }
@@ -110,7 +111,7 @@ our @ISA = qw(Cassis::Dco);
 
 sub oscillate {
     my $self = shift;
-    my %args = @_;
+    my ( $w, $args ) = @_;
 
     my @dst = map {
         if ( $_ < 0.5 ) {
@@ -121,7 +122,7 @@ sub oscillate {
             # +1.0 -> -1.0
             1.0 - ( 4.0 * ($_ - 0.5) );
         }
-    } @{$args{pitch}};
+    } @{$w};
 
     return \@dst;
 }
@@ -154,19 +155,18 @@ Cassis::Dco - Digital Controlled Oscillator
     my $osc = Cassis::Dco::Sin->new( fs => $fs );
 
     # our $TUNING = 440.0;
-    # frequency = $TUNING * (2 ** voltage);
-    my $osc = Cassis::Dco::Sin->new( fs => $fs, voltage => 1.0 );
+    # frequency = $TUNING * (2 ** pitch);
+    my $osc = Cassis::Dco::Sin->new( fs => $fs, pitch => 1.0 );
 
-=item voltage()
+=item pitch()
 
-    # Get voltage.
-    my $v = 2.0;
-    $osc->set_voltage( $v );
+    # Get pitch.
+    my $pitch = $osc->pitch();
 
-=item set_voltage()
+=item set_pitch()
 
-    # Set voltage.
-    my $v = $osc->voltage();
+    # Set pitch.
+    $osc->set_pitch( $new_pitch );
 
 =item exec()
 
@@ -174,10 +174,10 @@ Cassis::Dco - Digital Controlled Oscillator
     my $dst = $osc->exec( num => $fs * 2 ); # 2sec
 
     # Osillate with modulation.
-    my $lfo = Cassis::Dco::Pulse->new( fs => $fs, voltage => -5 ); # Low Frequency Osillator
+    my $lfo = Cassis::Dco::Pulse->new( fs => $fs, pitch => -5 ); # Low Frequency Oscillator
     my $dst = $osc->exec(
         num => $fs * 2,
-        mod_voltage => {
+        mod_pitch => {
             src => $lfo->exec( num => $fs * 2 ), depth => 1.0
         }
     );

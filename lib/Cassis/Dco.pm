@@ -36,14 +36,16 @@ sub exec {
     if ( exists $args{mod_pitch} ) {
         my @src = ( $args{mod_pitch}->{src} ) ? @{$args{mod_pitch}->{src}} : ();
         my $depth = ( $args{mod_pitch}->{depth} ) ? $args{mod_pitch}->{depth} : 1.0;
+
+        while ( $args{num} < scalar(@src) ) { push @src, 0.0; }
         @ret = map {
             my $w = $t - int($t);
             $t += $_;
             $w;
         } map {
-            my $pitch = $self->{pitch} + (((@src) ? shift @src : 0.0) * $depth);
-            ($TUNING * (2.0 ** $pitch)) / $self->{fs};
-        } 1..$args{num};
+            my $pitch = $self->{pitch} + ($_ * $depth);
+            ($self->{tuning} * (2.0 ** $pitch)) / $self->{fs};
+        } @src;
     }
     else {
         my $dt = ($TUNING * (2.0 ** $self->{pitch})) / $self->{fs};

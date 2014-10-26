@@ -149,8 +149,8 @@ Cassis::Dco - Digital Controlled Oscillator
     use Cassis::Dco;
 
     my $fs = 44100;
-    my $osc = Cassis::Dco::Sin->new( fs => $fs );
-    my $dst = $osc->exec( num => $fs * 2 ); # 2sec
+    my $dco = Cassis::Dco::Sin->new( fs => $fs );
+    my $dst = $dco->exec( num => $fs * 2 ); # 2sec
 
 =head1 DESCRIPTION
 
@@ -159,30 +159,30 @@ Cassis::Dco - Digital Controlled Oscillator
 =item new()
 
     # "fs" is sampling-rate.
-    my $osc = Cassis::Dco::Sin->new( fs => $fs );
+    my $dco = Cassis::Dco::Sin->new( fs => $fs );
 
     # our $TUNING = 440.0;
     # frequency = $TUNING * (2 ** pitch);
-    my $osc = Cassis::Dco::Sin->new( fs => $fs, pitch => 1.0 );
+    my $dco = Cassis::Dco::Sin->new( fs => $fs, pitch => 1.0 );
 
 =item pitch()
 
     # Get pitch.
-    my $pitch = $osc->pitch();
+    my $pitch = $dco->pitch();
 
 =item set_pitch()
 
     # Set pitch.
-    $osc->set_pitch( $new_pitch );
+    $dco->set_pitch( $new_pitch );
 
 =item exec()
 
     # Get osillation result.
-    my $dst = $osc->exec( num => $fs * 2 ); # 2sec
+    my $dst = $dco->exec( num => $fs * 2 ); # 2sec
 
     # Osillate with modulation.
     my $lfo = Cassis::Dco::Pulse->new( fs => $fs, pitch => -5 ); # Low Frequency Oscillator
-    my $dst = $osc->exec(
+    my $dst = $dco->exec(
         num => $fs * 2,
         mod_pitch => {
             src => $lfo->exec( num => $fs * 2 ), depth => 1.0
@@ -197,19 +197,19 @@ Cassis::Dco - Digital Controlled Oscillator
 
 =item Sin Wave
 
-    my $osc = Cassis::Dco::Sin->new( fs => $fs );
+    my $dco = Cassis::Dco::Sin->new( fs => $fs );
 
 =item Pulse Wave
 
-    my $osc = Cassis::Dco::Pulse->new( fs => $fs );
+    my $dco = Cassis::Dco::Pulse->new( fs => $fs );
 
 =item Saw Wave
 
-    my $osc = Cassis::Dco::Saw->new( fs => $fs );
+    my $dco = Cassis::Dco::Saw->new( fs => $fs );
 
 =item Tri Wave
 
-    my $osc = Cassis::Dco::Tri->new( fs => $fs );
+    my $dco = Cassis::Dco::Tri->new( fs => $fs );
 
 =back
 

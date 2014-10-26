@@ -32,7 +32,7 @@ Cassis - Synthesizer Modules
         my $fs = ( exists $args{fs} ) ? $args{fs} : 44100;
         bless {
             samples => [],
-            sf      => $fs,
+            fs      => $fs,
             dco     => Cassis::Dco->new( fs => $fs )
         }, $class;
     }
@@ -49,7 +49,7 @@ Cassis - Synthesizer Modules
         my $self = shift;
         my %args = @_;
     
-        $args{sf}       = $self->{sf};
+        $args{fs}       = $self->{fs};
         $args{channels} = [ $self->{samples} ];
     
         Cassis::File::write( %args );

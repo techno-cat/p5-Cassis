@@ -2,7 +2,7 @@ package Cassis::Dco;
 use strict;
 use warnings;
 
-our $TUNING = 440.0;
+our $TUNING_A4 = 440.0; # at pitch = 4.0
 
 sub new {
     my $class = shift;
@@ -13,7 +13,8 @@ sub new {
     bless {
         fs => $args{fs},
         t => 0.0,
-        pitch => ( exists $args{pitch} ) ? $args{pitch} : 0.0
+        pitch => ( exists $args{pitch} ) ? $args{pitch} : 0.0,
+        tuning => $TUNING_A4 * (2.0 ** -4)
     }, $class;
 }
 
@@ -48,7 +49,7 @@ sub exec {
         } @src;
     }
     else {
-        my $dt = ($TUNING * (2.0 ** $self->{pitch})) / $self->{fs};
+        my $dt = ($self->{tuning} * (2.0 ** $self->{pitch})) / $self->{fs};
         @ret = map {
             my $w = $t - int($t);
             $t += $dt;

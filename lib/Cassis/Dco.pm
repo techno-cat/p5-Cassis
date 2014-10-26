@@ -13,8 +13,7 @@ sub new {
     bless {
         fs => $args{fs},
         t => 0.0,
-        voltage => ( exists $args{voltage} ) ? $args{voltage} : 0.0,
-        custom_osc => ( exists $args{custom_osc} ) ? $args{custom_osc} : sub { return []; }
+        voltage => ( exists $args{voltage} ) ? $args{voltage} : 0.0
     }, $class;
 }
 
@@ -60,10 +59,7 @@ sub exec {
 }
 
 sub oscillate {
-    my $self = shift;
-    my %args = @_;
-
-    return $self->{custom_osc}->( %args );
+    die 'Must be override.';
 }
 
 package Cassis::Dco::Sin;

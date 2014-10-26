@@ -55,6 +55,7 @@ Cassis - Synthesizer Modules
 
 - Cassis - This document.
 - Cassis::Dco - Digital Controlled Oscillator.
+- Cassis::Dca - Digital Controlled Amplifier.
 - Cassis::Iir2 - Second-order IIR digital filter.
 - Cassis::File - Wave File IO.
 

@@ -38,7 +38,11 @@ sub exec {
         my @src = ( $args{mod_pitch}->{src} ) ? @{$args{mod_pitch}->{src}} : ();
         my $depth = ( $args{mod_pitch}->{depth} ) ? $args{mod_pitch}->{depth} : 1.0;
 
-        while ( $args{num} < scalar(@src) ) { push @src, 0.0; }
+        if ( scalar(@src) < $args{num} ) {
+            warn 'Modulation source is shorter than input.';
+            while ( scalar(@src) < $args{num} ) { push @src, 0.0; }
+        }
+
         @ret = map {
             my $w = $t - int($t);
             $t += $_;

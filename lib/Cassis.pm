@@ -6,7 +6,7 @@ use warnings;
 our $VERSION = "0.01";
 
 use Cassis::Dco;
-use Cassis::Dca;
+use Cassis::Amp;
 use Cassis::Iir2;
 use Cassis::File;
 
@@ -82,7 +82,7 @@ Cassis::Dco - Digital Controlled Oscillator.
 
 =item *
 
-Cassis::Dca - Digital Controlled Amplifier.
+Cassis::Amp - Amplifier Section.
 
 =item *
 

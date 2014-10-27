@@ -6,7 +6,8 @@ sub new {
     my $class = shift;
     my %args = @_;
 
-    if ( not exists $args{fs} )   { die 'fs parameter is required.';   }
+    if ( not exists $args{fs} ) { die 'fs parameter is required.'; }
+    if ( $args{fs} <= 0 ) { die 'fs parameter must be greater than 0.'; }
 
     my $adsr = ( exists $args{adsr} ) ? $args{adsr} : [ 0.0, 0.0, 1.0, 0.0 ];
     my ( $attack, $decay, $sustain, $release ) = _to_valid_adsr( $adsr );

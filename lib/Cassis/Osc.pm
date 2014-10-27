@@ -7,6 +7,7 @@ sub new {
     my %args = @_;
 
     if ( not exists $args{fs} ) { die 'fs parameter is required.'; }
+    if ( $args{fs} <= 0 ) { die 'fs parameter must be greater than 0.'; }
 
     bless {
         fs   => $args{fs},

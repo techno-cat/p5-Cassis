@@ -30,9 +30,9 @@ sub exec {
         my @mod_src = ( exists $args{mod_volume}->{src} ) ? @{$args{mod_volume}->{src}} : ();
         my $mod_depth = ( exists $args{mod_volume}->{depth} ) ? $args{mod_volume}->{depth} : 1.0;
 
-        if ( scalar($args{src}) < scalar(@mod_src) ) {
+        if ( scalar(@mod_src) < scalar(@{$args{src}}) ) {
             warn 'Modulation source is shorter than input.';
-            while ( scalar(@mod_src) < scalar($args{src}) ) { push @mod_src, 0.0; }
+            while ( scalar(@mod_src) < scalar(@{$args{src}}) ) { push @mod_src, 0.0; }
         }
 
         my $mod_range = $self->{volume} * $mod_depth;

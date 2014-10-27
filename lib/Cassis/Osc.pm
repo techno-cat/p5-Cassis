@@ -162,7 +162,7 @@ Cassis::Osc - Oscillator
         fs => 44100     # Sampling rate.
     );
     
-    my $osc = Cassis::Dco::Sin->new(
+    my $osc = Cassis::Osc::Sin->new(
         fs => 44100,    # Sampling rate.
         freq => 1.0     # Frequency(Hz)
     );

@@ -36,8 +36,8 @@ sub exec {
     my @w_list = ();
     my $t = $self->{t};
     if ( exists $args{mod_pitch} ) {
-        my @mod_src = ( $args{mod_pitch}->{src} ) ? @{$args{mod_pitch}->{src}} : ();
-        my $mod_depth = ( $args{mod_pitch}->{depth} ) ? $args{mod_pitch}->{depth} : 1.0;
+        my @mod_src = ( exists $args{mod_pitch}->{src} ) ? @{$args{mod_pitch}->{src}} : ();
+        my $mod_depth = ( exists $args{mod_pitch}->{depth} ) ? $args{mod_pitch}->{depth} : 1.0;
 
         if ( scalar(@mod_src) < $args{num} ) {
             warn 'Modulation source is shorter than input.';

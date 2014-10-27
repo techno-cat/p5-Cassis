@@ -33,8 +33,8 @@ sub exec {
     my @w_list = ();
     my $t = $self->{t};
     if ( exists $args{mod_freq} ) {
-        my @mod_src = ( $args{mod_freq}->{src} ) ? @{$args{mod_freq}->{src}} : ();
-        my $mod_depth = ( $args{mod_freq}->{depth} ) ? $args{mod_freq}->{depth} : 1.0;
+        my @mod_src = ( exists $args{mod_freq}->{src} ) ? @{$args{mod_freq}->{src}} : ();
+        my $mod_depth = ( exists $args{mod_freq}->{depth} ) ? $args{mod_freq}->{depth} : 1.0;
 
         if ( scalar(@mod_src) < $args{num} ) {
             warn 'Modulation source is shorter than input.';
@@ -42,13 +42,12 @@ sub exec {
         }
 
         my $mod_range = $self->{freq} * $mod_depth;
-        my $freq0 = $self->{freq} - $mod_range;
         @w_list = map {
             my $w = $t - int($t);
             $t += $_;
             $w;
         } map {
-            my $freq = $freq0 + ($_ * $mod_range);
+            my $freq = $self->{freq} + ($mod_range * $_);
             ( $freq < 0.0 ) ? 0.0 : ($freq / $self->{fs});
         } @mod_src;
     }

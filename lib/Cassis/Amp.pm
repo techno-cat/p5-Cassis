@@ -27,8 +27,8 @@ sub exec {
 
     my @dst = ();
     if ( exists $args{mod_volume} ) {
-        my @mod_src = ( $args{mod_volume}->{src} ) ? @{$args{mod_volume}->{src}} : ();
-        my $mod_depth = ( $args{mod_volume}->{depth} ) ? $args{mod_volume}->{depth} : 1.0;
+        my @mod_src = ( exists $args{mod_volume}->{src} ) ? @{$args{mod_volume}->{src}} : ();
+        my $mod_depth = ( exists $args{mod_volume}->{depth} ) ? $args{mod_volume}->{depth} : 1.0;
 
         if ( scalar($args{src}) < scalar(@mod_src) ) {
             warn 'Modulation source is shorter than input.';

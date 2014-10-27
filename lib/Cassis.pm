@@ -6,6 +6,7 @@ use warnings;
 our $VERSION = "0.01";
 
 use Cassis::Dco;
+use Cassis::Osc;
 use Cassis::Amp;
 use Cassis::EG;
 use Cassis::Iir2;
@@ -80,6 +81,10 @@ Cassis - This document.
 =item *
 
 Cassis::Dco - Digital Controlled Oscillator.
+
+=item *
+
+Cassis::Osc - Oscillator.
 
 =item *
 

@@ -38,5 +38,12 @@ is_deeply $amp->exec(
     }
 ), [ 1, 1.5, 2 ], 'with moduration.';
 
+is_deeply $amp->exec(
+    src => [ 2, 2, 2 ],
+    mod_volume => {
+        src => [ -1, 0, 1 ], depth => -0.25
+    }
+), [ 2, 1.5, 1 ], 'with moduration.';
+
 done_testing;
 

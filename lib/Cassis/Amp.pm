@@ -36,7 +36,7 @@ sub exec {
         }
 
         my $mod_range = $self->{volume} * $mod_depth;
-        my $volume0 = $self->{volume} - $mod_range;
+        my $volume0 = $self->{volume} - abs($mod_range);
         @dst = map {
             my $volume = $volume0 + (shift(@mod_src) * $mod_range);
             $_ * (( $volume < 0.0 ) ? 0.0 : $volume);

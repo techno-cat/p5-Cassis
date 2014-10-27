@@ -5,7 +5,7 @@ use warnings;
 
 our $VERSION = "0.01";
 
-use Cassis::Dco;
+use Cassis::DCO;
 use Cassis::Osc;
 use Cassis::Amp;
 use Cassis::EG;
@@ -36,7 +36,7 @@ Cassis - Synthesizer Modules
         bless {
             samples => [],
             fs      => $fs,
-            dco     => Cassis::Dco->new( fs => $fs )
+            dco     => Cassis::DCO->new( fs => $fs )
         }, $class;
     }
     
@@ -80,7 +80,7 @@ Cassis - This document.
 
 =item *
 
-Cassis::Dco - Digital Controlled Oscillator.
+Cassis::DCO - Digital Controlled Oscillator.
 
 =item *
 

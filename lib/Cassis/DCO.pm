@@ -1,4 +1,4 @@
-package Cassis::Dco;
+package Cassis::DCO;
 use strict;
 use warnings;
 
@@ -32,29 +32,29 @@ sub exec {
 
     if ( not exists $args{num} ) { die 'num parameter is required.'; }
 
-    my @ret = ();
+    my @w_list = ();
     my $t = $self->{t};
     if ( exists $args{mod_pitch} ) {
-        my @src = ( $args{mod_pitch}->{src} ) ? @{$args{mod_pitch}->{src}} : ();
-        my $depth = ( $args{mod_pitch}->{depth} ) ? $args{mod_pitch}->{depth} : 1.0;
+        my @mod_src = ( $args{mod_pitch}->{src} ) ? @{$args{mod_pitch}->{src}} : ();
+        my $mod_depth = ( $args{mod_pitch}->{depth} ) ? $args{mod_pitch}->{depth} : 1.0;
 
-        if ( scalar(@src) < $args{num} ) {
+        if ( scalar(@mod_src) < $args{num} ) {
             warn 'Modulation source is shorter than input.';
-            while ( scalar(@src) < $args{num} ) { push @src, 0.0; }
+            while ( scalar(@mod_src) < $args{num} ) { push @mod_src, 0.0; }
         }
 
-        @ret = map {
+        @w_list = map {
             my $w = $t - int($t);
             $t += $_;
             $w;
         } map {
             my $pitch = $self->{pitch} + ($_ * $depth);
             ($self->{tuning} * (2.0 ** $pitch)) / $self->{fs};
-        } @src;
+        } @mod_src;
     }
     else {
         my $dt = ($self->{tuning} * (2.0 ** $self->{pitch})) / $self->{fs};
-        @ret = map {
+        @w_list = map {
             my $w = $t - int($t);
             $t += $dt;
             $w;
@@ -63,16 +63,16 @@ sub exec {
 
     $self->{t} = $t;
 
-    return $self->oscillate( \@ret, args => \%args );
+    return $self->oscillate( \@w_list, args => \%args );
 }
 
 sub oscillate {
     die 'Must be override.';
 }
 
-package Cassis::Dco::Sin;
-our @ISA = qw(Cassis::Dco);
+package Cassis::DCO::Sin;
 use Math::Trig ':pi';
+our @ISA = qw ( Cassis::Osc );
 
 sub oscillate {
     my $self = shift;
@@ -85,22 +85,22 @@ sub oscillate {
     return \@dst;
 }
 
-package Cassis::Dco::Pulse;
-our @ISA = qw(Cassis::Dco);
+package Cassis::DCO::Pulse;
+our @ISA = qw ( Cassis::Osc );
 
 sub oscillate {
     my $self = shift;
     my ( $w, $args ) = @_;
 
     my @dst = map {
-        ( $_ < 0.5 ) ? -1.0 : 1.0;;
+        ( $_ < 0.5 ) ? -1.0 : 1.0;
     } @{$w};
 
     return \@dst;
 }
 
-package Cassis::Dco::Saw;
-our @ISA = qw(Cassis::Dco);
+package Cassis::DCO::Saw;
+our @ISA = qw ( Cassis::Osc );
 
 sub oscillate {
     my $self = shift;
@@ -113,8 +113,8 @@ sub oscillate {
     return \@dst;
 }
 
-package Cassis::Dco::Tri;
-our @ISA = qw(Cassis::Dco);
+package Cassis::DCO::Tri;
+our @ISA = qw ( Cassis::Osc );
 
 sub oscillate {
     my $self = shift;
@@ -142,14 +142,14 @@ __END__
 
 =head1 NAME
 
-Cassis::Dco - Digital Controlled Oscillator
+Cassis::DCO - Digital Controlled Oscillator
 
 =head1 SYNOPSIS
 
-    use Cassis::Dco;
-
+    use Cassis::DCO;
+    
     my $fs = 44100;
-    my $dco = Cassis::Dco::Sin->new( fs => $fs );
+    my $dco = Cassis::DCO::Sin->new( fs => $fs );
     my $dst = $dco->exec( num => $fs * 2 ); # 2sec
 
 =head1 DESCRIPTION
@@ -158,12 +158,18 @@ Cassis::Dco - Digital Controlled Oscillator
 
 =item new()
 
-    # "fs" is sampling-rate.
-    my $dco = Cassis::Dco::Sin->new( fs => $fs );
+"fs" is required.
 
+    my $osc = Cassis::DCO::Sin->new(
+        fs => 44100     # Sampling rate.
+    );
+    
     # our $TUNING = 440.0;
-    # frequency = $TUNING * (2 ** pitch);
-    my $dco = Cassis::Dco::Sin->new( fs => $fs, pitch => 1.0 );
+    # freq. = $TUNING * (2 ** pitch);
+    my $osc = Cassis::DCO::Sin->new(
+        fs => 44100,    # Sampling rate.
+        pitch => 4.0    # Pitch
+    );
 
 =item pitch()
 
@@ -173,19 +179,23 @@ Cassis::Dco - Digital Controlled Oscillator
 =item set_pitch()
 
     # Set pitch.
+    my $pitch = 5.0 + (1.0 / 12.0);
     $dco->set_pitch( $new_pitch );
 
 =item exec()
 
     # Get osillation result.
+    my $fs = 44100;
+    my $osc = Cassis::DCO::Sin->new( fs => $fs );
     my $dst = $dco->exec( num => $fs * 2 ); # 2sec
-
+    
     # Osillate with modulation.
-    my $lfo = Cassis::Dco::Pulse->new( fs => $fs, pitch => -5 ); # Low Frequency Oscillator
+    my $osc = Cassis::Osc::Pulse->new( fs => $fs, freq => 4 ); # Low Frequency Oscillator
     my $dst = $dco->exec(
         num => $fs * 2,
         mod_pitch => {
-            src => $lfo->exec( num => $fs * 2 ), depth => 1.0
+            src => $osc->exec( num => $fs * 2 ),
+            depth => 1.0 # Modulation between +1 octave from -1 octave.
         }
     );
 
@@ -197,19 +207,19 @@ Cassis::Dco - Digital Controlled Oscillator
 
 =item Sin Wave
 
-    my $dco = Cassis::Dco::Sin->new( fs => $fs );
+    my $dco = Cassis::DCO::Sin->new( fs => $fs );
 
 =item Pulse Wave
 
-    my $dco = Cassis::Dco::Pulse->new( fs => $fs );
+    my $dco = Cassis::DCO::Pulse->new( fs => $fs );
 
 =item Saw Wave
 
-    my $dco = Cassis::Dco::Saw->new( fs => $fs );
+    my $dco = Cassis::DCO::Saw->new( fs => $fs );
 
 =item Tri Wave
 
-    my $dco = Cassis::Dco::Tri->new( fs => $fs );
+    my $dco = Cassis::DCO::Tri->new( fs => $fs );
 
 =back
 

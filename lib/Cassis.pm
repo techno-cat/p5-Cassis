@@ -7,6 +7,7 @@ our $VERSION = "0.01";
 
 use Cassis::Dco;
 use Cassis::Amp;
+use Cassis::EG;
 use Cassis::Iir2;
 use Cassis::File;
 
@@ -83,6 +84,10 @@ Cassis::Dco - Digital Controlled Oscillator.
 =item *
 
 Cassis::Amp - Amplifier Section.
+
+=item *
+
+Cassis::EG - Envelop Genarator.
 
 =item *
 

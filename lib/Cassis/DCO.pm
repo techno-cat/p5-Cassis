@@ -48,7 +48,7 @@ sub exec {
             $t += $_;
             $w;
         } map {
-            my $pitch = $self->{pitch} + ($_ * $depth);
+            my $pitch = $self->{pitch} + ($_ * $mod_depth);
             ($self->{tuning} * (2.0 ** $pitch)) / $self->{fs};
         } @mod_src;
     }
@@ -72,7 +72,7 @@ sub oscillate {
 
 package Cassis::DCO::Sin;
 use Math::Trig ':pi';
-our @ISA = qw ( Cassis::Osc );
+our @ISA = qw ( Cassis::DCO );
 
 sub oscillate {
     my $self = shift;
@@ -86,7 +86,7 @@ sub oscillate {
 }
 
 package Cassis::DCO::Pulse;
-our @ISA = qw ( Cassis::Osc );
+our @ISA = qw ( Cassis::DCO );
 
 sub oscillate {
     my $self = shift;
@@ -100,7 +100,7 @@ sub oscillate {
 }
 
 package Cassis::DCO::Saw;
-our @ISA = qw ( Cassis::Osc );
+our @ISA = qw ( Cassis::DCO );
 
 sub oscillate {
     my $self = shift;
@@ -114,7 +114,7 @@ sub oscillate {
 }
 
 package Cassis::DCO::Tri;
-our @ISA = qw ( Cassis::Osc );
+our @ISA = qw ( Cassis::DCO );
 
 sub oscillate {
     my $self = shift;

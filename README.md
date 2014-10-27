@@ -17,7 +17,7 @@ Cassis - Synthesizer Modules
         bless {
             samples => [],
             fs      => $fs,
-            dco     => Cassis::Dco->new( fs => $fs )
+            dco     => Cassis::DCO->new( fs => $fs )
         }, $class;
     }
     
@@ -54,8 +54,10 @@ Cassis - Synthesizer Modules
 ## Overview of documentation
 
 - Cassis - This document.
-- Cassis::Dco - Digital Controlled Oscillator.
-- Cassis::Dca - Digital Controlled Amplifier.
+- Cassis::DCO - Digital Controlled Oscillator.
+- Cassis::Osc - Oscillator.
+- Cassis::Amp - Amplifier Section.
+- Cassis::EG - Envelop Genarator.
 - Cassis::Iir2 - Second-order IIR digital filter.
 - Cassis::File - Wave File IO.
 

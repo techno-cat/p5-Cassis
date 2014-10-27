@@ -183,7 +183,7 @@ Cassis::EG - Envelop Genarator
 =head1 SYNOPSIS
 
     use Cassis::EG;
-
+    
     my $envelop = Cassis::EG->new( fs => 44100, adsr => [ 0.1, 0.2, 1.0, 0.5 ] );
     my $dst = $envelop->exec( num => 44100 ); # 1sec
 
@@ -203,7 +203,7 @@ Cassis::EG - Envelop Genarator
     # /             V               \_______
     # <-----------------------><---->
     #          Gate Time      Release
-
+    
     # "fs" is required.
     my $envelop = Cassis::EG->new(
         fs => 44100, # sampling-rate

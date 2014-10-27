@@ -65,7 +65,7 @@ Cassis::Amp - Amplifier Section
 =head1 SYNOPSIS
 
     use Cassis::Amp;
-
+    
     my $amp = Cassis::Amp->new( volume => 0.8 );
     my $dst = $osc->exec( src => [ 1, 2, 3 ] );
 
@@ -94,7 +94,7 @@ Cassis::Amp - Amplifier Section
     # Get amplification result.
     $amp->set_volume( 2.0 );
     my $dst = $amp->exec( src => [ 1, 2, 3 ] ); # => [ 2, 4, 6 ]
-
+    
     # Amplification with modulation.
     $amp->set_volume( 1.0 );
     my $dst = $amp->exec(
@@ -103,7 +103,7 @@ Cassis::Amp - Amplifier Section
             src => [ -1, 0, +1 ], depth => 1.0
         }
     ); # => [ 0, 1, 3 ];
-
+    
     my $dst = $amp->exec( src => [ 1, 2, 3 ] ); # => [ 2, 4, 6 ]
 
 =back

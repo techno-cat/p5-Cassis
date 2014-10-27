@@ -87,11 +87,11 @@ Cassis::File - Wave File IO
 
     use Cassis::File;
     use Math::Trig ':pi';
-
+    
     # Sin Wave
     my $pitch = 44100 / 440;
     my @samples = map { sin((2.0 * pi) * $_ / $pitch); } 0..(44100 - 1);
-
+    
     Cassis::File::write( file => 'sin.wav', channels => [ \@samples ] );
 
 =head1 DESCRIPTION

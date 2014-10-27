@@ -1,4 +1,4 @@
-package Cassis::Dca;
+package Cassis::Amp;
 use strict;
 use warnings;
 
@@ -35,7 +35,7 @@ sub exec {
             while ( scalar(@mod_src) < scalar($args{src}) ) { push @mod_src, 0.0; }
         }
 
-        my $mod_range = ($self->{volume} * 0.5) * $mod_depth;
+        my $mod_range = $self->{volume} * $mod_depth;
         my $volume0 = $self->{volume} - $mod_range;
         @dst = map {
             my $volume = $volume0 + (shift(@mod_src) * $mod_range);
@@ -60,13 +60,13 @@ __END__
 
 =head1 NAME
 
-Cassis::Dca - Digital Controlled Amplifier
+Cassis::Amp - Amplifier Section
 
 =head1 SYNOPSIS
 
-    use Cassis::Dca;
+    use Cassis::Amp;
 
-    my $dca = Cassis::Dca->new( volume => 0.8 );
+    my $amp = Cassis::Amp->new( volume => 0.8 );
     my $dst = $osc->exec( src => [ 1, 2, 3 ] );
 
 =head1 DESCRIPTION
@@ -76,35 +76,35 @@ Cassis::Dca - Digital Controlled Amplifier
 =item new()
 
     # "volume" is amplification factor.
-    my $dca = Cassis::Dca::new();
-    my $dca = Cassis::Dca::new( volume => 0.8 );
+    my $amp = Cassis::Amp::new();
+    my $amp = Cassis::Amp::new( volume => 0.8 );
 
 =item volume()
 
     # Get volume.
-    my $volume = $dca->volume();
+    my $volume = $amp->volume();
 
 =item set_volume()
 
     # Set volume.
-    $dca->set_volume( $new_volume );
+    $amp->set_volume( $new_volume );
 
 =item exec()
 
     # Get amplification result.
-    $dca->set_volume( 2.0 );
-    my $dst = $dca->exec( src => [ 1, 2, 3 ] ); # => [ 2, 4, 6 ]
+    $amp->set_volume( 2.0 );
+    my $dst = $amp->exec( src => [ 1, 2, 3 ] ); # => [ 2, 4, 6 ]
 
     # Amplification with modulation.
-    $dca->set_volume( 1.0 );
-    my $dst = $dca->exec(
+    $amp->set_volume( 1.0 );
+    my $dst = $amp->exec(
         src => [ 1, 2, 3 ],
         mod_volume => {
             src => [ -1, 0, +1 ], depth => 1.0
         }
     ); # => [ 0, 1, 3 ];
 
-    my $dst = $dca->exec( src => [ 1, 2, 3 ] ); # => [ 2, 4, 6 ]
+    my $dst = $amp->exec( src => [ 1, 2, 3 ] ); # => [ 2, 4, 6 ]
 
 =back
 

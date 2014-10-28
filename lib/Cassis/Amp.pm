@@ -6,17 +6,28 @@ sub new {
     my $class = shift;
     my %args = @_;
 
-    bless {
-        volume => ( exists $args{volume} ) ? $args{volume} : 1.0
+    my $ret = bless {
+        volume => 1.0
     }, $class;
+
+    $ret->set_volume( $args{volume} ) if ( exists $args{volume} );
+
+    $ret;
+}
+
+sub set_volume {
+    my ( $self, $volume ) = @_;
+
+    if ( $volume < 0.0 ) {
+        warn "volume is clipped. ($volume -> 0)";
+        $volume = 0.0;
+    }
+
+    $self->{volume} = $volume;
 }
 
 sub volume {
     $_[0]->{volume};
-}
-
-sub set_volume {
-    $_[0]->{volume} = $_[1];
 }
 
 sub exec {
@@ -76,18 +87,19 @@ Cassis::Amp - Amplifier Section
 =item new()
 
     # "volume" is amplification factor.
-    my $amp = Cassis::Amp::new();
+    my $amp = Cassis::Amp::new(); # volume is 1.0.
     my $amp = Cassis::Amp::new( volume => 0.8 );
+
+=item set_volume()
+
+    # Set volume.
+    my $new_volume = 0.5; # ( 0.0 <= value )
+    $amp->set_volume( $new_volume );
 
 =item volume()
 
     # Get volume.
     my $volume = $amp->volume();
-
-=item set_volume()
-
-    # Set volume.
-    $amp->set_volume( $new_volume );
 
 =item exec()
 
@@ -98,13 +110,11 @@ Cassis::Amp - Amplifier Section
     # Amplification with modulation.
     $amp->set_volume( 1.0 );
     my $dst = $amp->exec(
-        src => [ 1, 2, 3 ],
+        src => [ 2, 2, 2 ],
         mod_volume => {
-            src => [ -1, 0, +1 ], depth => 1.0
+            src => [ -1, 0, +1 ], depth => 0.5
         }
-    ); # => [ 0, 1, 3 ];
-    
-    my $dst = $amp->exec( src => [ 1, 2, 3 ] ); # => [ 2, 4, 6 ]
+    ); # => [ 0, 1, 2 ];
 
 =back
 

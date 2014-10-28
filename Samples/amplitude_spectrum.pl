@@ -8,13 +8,12 @@ use constant N => 1000;
 
 my $cutoff = 0.2;
 my $q = 2.5;
-my $filter = Cassis::Iir2->new( cutoff => $cutoff, q => $q );
 
 my %filter_params = (
-    LPF => $filter->calc_lpf_params(),
-    HPF => $filter->calc_hpf_params(),
-    BPF => $filter->calc_bpf_params(),
-    BEF => $filter->calc_bef_params()
+    LPF => Cassis::Iir2::LPF->new( cutoff => $cutoff, q => $q )->params(),
+    HPF => Cassis::Iir2::HPF->new( cutoff => $cutoff, q => $q )->params(),
+    BPF => Cassis::Iir2::BPF->new( cutoff => $cutoff, q => $q )->params(),
+    BEF => Cassis::Iir2::BEF->new( cutoff => $cutoff, q => $q )->params()
 );
 
 foreach my $type ( qw(LPF HPF BPF BEF) ) {

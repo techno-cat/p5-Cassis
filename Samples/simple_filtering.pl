@@ -15,26 +15,26 @@ my $cutoff = 0.01;
 my $q = 1.0 / sqrt(2.0);
 
 {
-    my $f = Cassis::Iir2->new( cutoff => $cutoff, q => $q );
-    my $dst = $f->exec( src => \@src, params => $f->calc_lpf_params() );
+    my $f = Cassis::Iir2::LPF->new( cutoff => $cutoff, q => $q );
+    my $dst = $f->exec( src => \@src );
     draw_graph( 'graph_lpf.png', \@src, $dst );
 }
 
 {
-    my $f = Cassis::Iir2->new( cutoff => $cutoff, q => $q );
-    my $dst = $f->exec( src => \@src, params => $f->calc_hpf_params() );
+    my $f = Cassis::Iir2::HPF->new( cutoff => $cutoff, q => $q );
+    my $dst = $f->exec( src => \@src );
     draw_graph( 'graph_hpf.png', \@src, $dst );
 }
 
 {
-    my $f = Cassis::Iir2->new( cutoff => $cutoff, q => $q );
-    my $dst = $f->exec( src => \@src, params => $f->calc_bpf_params() );
+    my $f = Cassis::Iir2::BPF->new( cutoff => $cutoff, q => $q );
+    my $dst = $f->exec( src => \@src );
     draw_graph( 'graph_bpf.png', \@src, $dst );
 }
 
 {
-    my $f = Cassis::Iir2->new( cutoff => $cutoff, q => $q );
-    my $dst = $f->exec( src => \@src, params => $f->calc_bef_params() );
+    my $f = Cassis::Iir2::BEF->new( cutoff => $cutoff, q => $q );
+    my $dst = $f->exec( src => \@src );
     draw_graph( 'graph_bef.png', \@src, $dst );
 }
 

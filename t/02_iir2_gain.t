@@ -4,26 +4,24 @@ use List::Util qw(sum);
 use Math::Trig ":pi";
 
 use_ok $_ for qw(
-    Cassis
+    Cassis::Iir2
 );
 
 my $th = 0.001;
 my $q = 1.0 / sqrt(2.0);
 foreach my $cutoff ( $Cassis::Iir2::CUTOFF_MIN, $Cassis::Iir2::CUTOFF_MAX ) {
-    my $f = Cassis::Iir2->new( cutoff => $cutoff, q => $q );
-
     {
-        my $params = $f->calc_lpf_params();
+        my $params = Cassis::Iir2::LPF->new( cutoff => $cutoff, q => $q )->params();
         ok( abs(calc_gain($cutoff, $params) - $q) < $th, "LPF(Cutoff: $cutoff, Q: $q)" );
     }
 
     {
-        my $params = $f->calc_hpf_params();
+        my $params = Cassis::Iir2::HPF->new( cutoff => $cutoff, q => $q )->params();
         ok( abs(calc_gain($cutoff, $params) - $q) < $th, "HPF(Cutoff: $cutoff, Q: $q)" );
     }
 
     {
-        my $params = $f->calc_bpf_params();
+        my $params = Cassis::Iir2::BPF->new( cutoff => $cutoff, q => $q )->params();
         my $gain = calc_gain( $cutoff, $params );
         ok( (1.0 - $gain) < $th, "BPF(Cutoff: $cutoff, Q: $q)" );
         ok( calc_gain($cutoff + 0.0005, $params) < $gain, "BPF(Cutoff: $cutoff, Q: $q)" );
@@ -31,7 +29,7 @@ foreach my $cutoff ( $Cassis::Iir2::CUTOFF_MIN, $Cassis::Iir2::CUTOFF_MAX ) {
     }
 
     {
-        my $params = $f->calc_bef_params();
+        my $params = Cassis::Iir2::BEF->new( cutoff => $cutoff, q => $q )->params();
         my $gain = calc_gain( $cutoff, $params );
         ok( $gain < $th, "BEF(Cutoff: $cutoff, Q: $q)" );
         ok( $gain < calc_gain($cutoff + 0.0005, $params), "BEF(Cutoff: $cutoff, Q: $q)" );

@@ -19,12 +19,12 @@ sub new {
     }, $class;
 }
 
-sub pitch {
-    $_[0]->{pitch};
-}
-
 sub set_pitch {
     $_[0]->{pitch} = $_[1];
+}
+
+sub pitch {
+    $_[0]->{pitch};
 }
 
 sub exec {
@@ -172,16 +172,16 @@ Cassis::DCO - Digital Controlled Oscillator
         pitch => 4.0    # Pitch
     );
 
-=item pitch()
-
-    # Get pitch.
-    my $pitch = $dco->pitch();
-
 =item set_pitch()
 
     # Set pitch.
     my $pitch = 5.0 + (1.0 / 12.0);
     $dco->set_pitch( $new_pitch );
+
+=item pitch()
+
+    # Get pitch.
+    my $pitch = $dco->pitch();
 
 =item exec()
 

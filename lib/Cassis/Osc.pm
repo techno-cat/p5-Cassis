@@ -16,12 +16,12 @@ sub new {
     }, $class;
 }
 
-sub freq {
-    $_[0]->{freq};
-}
-
 sub set_freq {
     $_[0]->{freq} = $_[1];
+}
+
+sub freq {
+    $_[0]->{freq};
 }
 
 sub exec {
@@ -167,16 +167,16 @@ Cassis::Osc - Oscillator
         freq => 1.0     # Frequency(Hz)
     );
 
-=item freq()
-
-    # Get frequency.
-    my $freq = $osc->freq();
-
 =item set_freq()
 
     # Set frequency.
     my $new_freq = 2.0;
     $osc->set_freq( $new_freq );
+
+=item freq()
+
+    # Get frequency.
+    my $freq = $osc->freq();
 
 =item exec()
 

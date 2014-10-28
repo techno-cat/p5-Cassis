@@ -11,5 +11,12 @@ can_ok 'Cassis::DCO::Pulse', 'oscillate';
 can_ok 'Cassis::DCO::Saw'  , 'oscillate';
 can_ok 'Cassis::DCO::Tri'  , 'oscillate';
 
-done_testing;
+{
+    my $osc = Cassis::DCO::Sin->new( fs => 44100 );
+    is $osc->pitch(), 4.0, 'default value of pitch.';
 
+    $osc->set_pitch( 5.0 );
+    is $osc->pitch(), 5.0, 'set pitch.';
+}
+
+done_testing;

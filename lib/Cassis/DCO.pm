@@ -14,8 +14,8 @@ sub new {
     bless {
         fs => $args{fs},
         t => 0.0,
-        pitch => ( exists $args{pitch} ) ? $args{pitch} : 0.0,
-        tuning => $TUNING_A4 * (2.0 ** -4)
+        pitch => ( exists $args{pitch} ) ? $args{pitch} : 4.0,
+        tuning => $TUNING_A4 * (2.0 ** -4.0)
     }, $class;
 }
 

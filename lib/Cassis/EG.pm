@@ -13,7 +13,7 @@ sub new {
         fs    => $args{fs},
         t     => 0,
         adsr  => [ 0.0, 0.0, 1.0, 0.0 ],
-        curve => exp(1),
+        curve => 1.0,
         hold  => 0,
         last_value => 0.0
     }, $class;
@@ -113,7 +113,7 @@ sub exec {
     else {
 
         while ( $t < $release and scalar(@dst) < $args{num} ) {
-            my $wk = (($release - $t) / $release) ** $curve;
+            my $wk = 1.0 - (($t / $release) ** $curve);
             push @dst, ($self->{last_value} * $wk);
             $t++;
         }

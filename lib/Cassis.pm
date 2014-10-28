@@ -7,6 +7,7 @@ our $VERSION = "0.01";
 
 use Cassis::DCO;
 use Cassis::Osc;
+use Cassis::Noise;
 use Cassis::Amp;
 use Cassis::EG;
 use Cassis::Iir2;
@@ -85,6 +86,10 @@ Cassis::DCO - Digital Controlled Oscillator.
 =item *
 
 Cassis::Osc - Oscillator.
+
+=item *
+
+Cassis::Noise - Noise Genarator.
 
 =item *
 

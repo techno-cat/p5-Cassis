@@ -56,6 +56,7 @@ Cassis - Synthesizer Modules
 - Cassis - This document.
 - Cassis::DCO - Digital Controlled Oscillator.
 - Cassis::Osc - Oscillator.
+- Cassis::Noise - Noise Genarator.
 - Cassis::Amp - Amplifier Section.
 - Cassis::EG - Envelop Genarator.
 - Cassis::Iir2 - Second-order IIR digital filter.

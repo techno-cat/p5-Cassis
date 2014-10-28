@@ -9,38 +9,70 @@ sub new {
     if ( not exists $args{fs} ) { die 'fs parameter is required.'; }
     if ( $args{fs} <= 0 ) { die 'fs parameter must be greater than 0.'; }
 
-    my $adsr = ( exists $args{adsr} ) ? $args{adsr} : [ 0.0, 0.0, 1.0, 0.0 ];
-    my ( $attack, $decay, $sustain, $release ) = _to_valid_adsr( $adsr );
-
-    bless {
+    my $ret = bless {
         fs    => $args{fs},
         t     => 0,
-        adsr  => [ $attack, $decay, $sustain, $release ],
-        curve => ( exists $args{curve} ) ? _to_valid_curve($args{curve}) : exp(1),
+        adsr  => [ 0.0, 0.0, 1.0, 0.0 ],
+        curve => exp(1),
         hold  => 0,
         last_value => 0.0
     }, $class;
+
+    $ret->set_adsr( $args{adsr} ) if ( exists $args{adsr} );
+    $ret->set_curve( $args{curve} ) if ( exists $args{curve} );
+
+    $ret;
 }
 
-sub curve {
-    $_[0]->{curve};
-}
+sub set_adsr {
+    my ( $self, $adsr ) = @_;
 
-sub set_curve {
-    my ( $self, $curve ) = @_;
+    if ( scalar(@{$adsr}) != 4 ) {
+        die 'adsr parameter must contain 4 parameters.';
+    }
 
-    $self->{curve} = _to_valid_curve( $curve );
+    my ( $attack, $decay, $sustain, $release ) = @{$adsr};
+
+    if ( $attack < 0.0 ) {
+        warn "Attack is clipped. ($attack -> 0)";
+        $attack = 0.0;
+    }
+
+    if ( $decay < 0.0 ) {
+        warn "Decay is clipped. ($decay -> 0)";
+        $decay = 0.0;
+    }
+
+    if ( $sustain < 0.0 ) {
+        warn "Sustain is clipped. ($sustain -> 0)";
+        $sustain = 0.0;
+    }
+
+    if ( $release < 0.0 ) {
+        warn "Release is clipped. ($release -> 0)";
+        $release = 0.0;
+    }
+
+    $self->{adsr} = [ $attack, $decay, $sustain, $release ];
 }
 
 sub adsr {
     $_[0]->{adsr};
 }
 
-sub set_adsr {
-    my ( $self, $adsr ) = @_;
+sub set_curve {
+    my ( $self, $curve ) = @_;
 
-    my ( $attack, $decay, $sustain, $release ) = _to_valid_adsr( $adsr );
-    $self->{adsr} = [ $attack, $decay, $sustain, $release ];
+    if ( $curve < 0.0 ) {
+        warn "curve is clipped. ($curve -> 0)";
+        $curve = 0.0;
+    }
+
+    $self->{curve} = $curve;
+}
+
+sub curve {
+    $_[0]->{curve};
 }
 
 sub exec {
@@ -128,49 +160,6 @@ sub hold {
     $_[0]->{hold};
 }
 
-sub _to_valid_adsr {
-    my $adsr = shift;
-
-    if ( scalar(@{$adsr}) != 4 ) {
-        die 'adsr parameter must contain 4 parameters.';
-    }
-
-    my ( $attack, $decay, $sustain, $release ) = @{$adsr};
-
-    if ( $attack < 0.0 ) {
-        warn "Attack is clipped. ($attack => 0)";
-        $attack = 0.0;
-    }
-
-    if ( $decay < 0.0 ) {
-        warn "Decay is clipped. ($decay => 0)";
-        $decay = 0.0;
-    }
-
-    if ( $sustain < 0.0 ) {
-        warn "Sustain is clipped. ($sustain => 0)";
-        $sustain = 0.0;
-    }
-
-    if ( $release < 0.0 ) {
-        warn "Release is clipped. ($release => 0)";
-        $release = 0.0;
-    }
-
-    return ( $attack, $decay, $sustain, $release );
-}
-
-sub _to_valid_curve {
-    my $curve = shift;
-
-    if ( $curve < 0.0 ) {
-        warn "curve is clipped. ($curve => 0)";
-        $curve = 0.0;
-    }
-
-    return $curve;
-}
-
 1;
 
 __END__
@@ -217,27 +206,32 @@ Cassis::EG - Envelop Genarator
         curve => 2.0 # default: exp^1(= 2.718...)
     );
 
+=item set_adsr()
+
+    # Set ADSR.
+    my $new_adsr = [
+        0.2,    # Attack(sec)  : ( 0.0 <= value )
+        0.1,    # Decay(sec)   : ( 0.0 <= value )
+        0.8,    # Sustain      : ( 0.0 <= value )
+        0.5     # Release(sec) : ( 0.0 <= value )
+    ];
+    $envelop->set_adsr( $new_adsr );
+
 =item adsr()
 
     # Get ADSR. See also "set_adsr()".
     my $adsr = $dca->adsr();
 
-=item set_adsr()
+=item set_curve()
 
-    # Set ADSR.
-    my $new_adsr = [ 0.2, 0.1, 0.8, 0.5 ];
-    $envelop->set_adsr( $new_adsr );
+    # Set curve.
+    my $new_curve = 1.0; # ( 0.0 <= value )
+    $envelop->set_curve( $new_curve );
 
 =item curve()
 
     # Get curve.
     my $curve = $envelop->curve();
-
-=item set_curve()
-
-    # Set curve.
-    my $new_curve = 1.0;
-    $envelop->set_curve( $new_curve );
 
 =item on()
 

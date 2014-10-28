@@ -97,21 +97,22 @@ sub exec {
     if ( not exists $args{src} ) { die 'src parameter is required.'; }
 
     if ( exists $args{mod_cutoff} or exists $args{mod_q} ) {
+        my $n = scalar(@{$args{src}});
 
-        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : ();
+        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : map { 0; } 1..$n;
         my $cutoff_depth = ( exists $args{mod_cutoff}->{depth} ) ? $args{mod_cutoff}->{depth} : 1.0;
 
-        if ( scalar(@cutoff_src) < scalar(@{$args{src}}) ) {
+        if ( scalar(@cutoff_src) < $n ) {
             warn 'Cutoff modulation source is shorter than input.';
-            while ( scalar(@cutoff_src) < scalar(@{$args{src}}) ) { push @cutoff_src, 0.0; }
+            while ( scalar(@cutoff_src) < $n ) { push @cutoff_src, 0.0; }
         }
 
-        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : ();
+        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : map { 0; } 1..$n;
         my $q_depth = ( exists $args{mod_q}->{depth} ) ? $args{mod_q}->{depth} : 1.0;
 
-        if ( scalar(@q_src) < scalar(@{$args{src}}) ) {
+        if ( scalar(@q_src) < $n ) {
             warn 'Q modulation source is shorter than input.';
-            while ( scalar(@q_src) < scalar(@{$args{src}}) ) { push @q_src, 0.0; }
+            while ( scalar(@q_src) < $n ) { push @q_src, 0.0; }
         }
 
         my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
@@ -179,21 +180,22 @@ sub exec {
     if ( not exists $args{src} ) { die 'src parameter is required.'; }
 
     if ( exists $args{mod_cutoff} or exists $args{mod_q} ) {
+        my $n = scalar(@{$args{src}});
 
-        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : ();
+        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : map { 0; } 1..$n;
         my $cutoff_depth = ( exists $args{mod_cutoff}->{depth} ) ? $args{mod_cutoff}->{depth} : 1.0;
 
-        if ( scalar(@cutoff_src) < scalar(@{$args{src}}) ) {
+        if ( scalar(@cutoff_src) < $n ) {
             warn 'Cutoff modulation source is shorter than input.';
-            while ( scalar(@cutoff_src) < scalar(@{$args{src}}) ) { push @cutoff_src, 0.0; }
+            while ( scalar(@cutoff_src) < $n ) { push @cutoff_src, 0.0; }
         }
 
-        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : ();
+        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : map { 0; } 1..$n;
         my $q_depth = ( exists $args{mod_q}->{depth} ) ? $args{mod_q}->{depth} : 1.0;
 
-        if ( scalar(@q_src) < scalar(@{$args{src}}) ) {
+        if ( scalar(@q_src) < $n ) {
             warn 'Q modulation source is shorter than input.';
-            while ( scalar(@q_src) < scalar(@{$args{src}}) ) { push @q_src, 0.0; }
+            while ( scalar(@q_src) < $n ) { push @q_src, 0.0; }
         }
 
         my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
@@ -259,24 +261,23 @@ sub exec {
 
     if ( not exists $args{src} ) { die 'src parameter is required.'; }
 
-    if ( not exists $args{src} ) { die 'src parameter is required.'; }
-
     if ( exists $args{mod_cutoff} or exists $args{mod_q} ) {
+        my $n = scalar(@{$args{src}});
 
-        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : ();
+        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : map { 0; } 1..$n;
         my $cutoff_depth = ( exists $args{mod_cutoff}->{depth} ) ? $args{mod_cutoff}->{depth} : 1.0;
 
-        if ( scalar(@cutoff_src) < scalar(@{$args{src}}) ) {
+        if ( scalar(@cutoff_src) < $n ) {
             warn 'Cutoff modulation source is shorter than input.';
-            while ( scalar(@cutoff_src) < scalar(@{$args{src}}) ) { push @cutoff_src, 0.0; }
+            while ( scalar(@cutoff_src) < $n ) { push @cutoff_src, 0.0; }
         }
 
-        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : ();
+        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : map { 0; } 1..$n;
         my $q_depth = ( exists $args{mod_q}->{depth} ) ? $args{mod_q}->{depth} : 1.0;
 
-        if ( scalar(@q_src) < scalar(@{$args{src}}) ) {
+        if ( scalar(@q_src) < $n ) {
             warn 'Q modulation source is shorter than input.';
-            while ( scalar(@q_src) < scalar(@{$args{src}}) ) { push @q_src, 0.0; }
+            while ( scalar(@q_src) < $n ) { push @q_src, 0.0; }
         }
 
         my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
@@ -344,21 +345,22 @@ sub exec {
     if ( not exists $args{src} ) { die 'src parameter is required.'; }
 
     if ( exists $args{mod_cutoff} or exists $args{mod_q} ) {
+        my $n = scalar(@{$args{src}});
 
-        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : ();
+        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : map { 0; } 1..$n;
         my $cutoff_depth = ( exists $args{mod_cutoff}->{depth} ) ? $args{mod_cutoff}->{depth} : 1.0;
 
-        if ( scalar(@cutoff_src) < scalar(@{$args{src}}) ) {
+        if ( scalar(@cutoff_src) < $n ) {
             warn 'Cutoff modulation source is shorter than input.';
-            while ( scalar(@cutoff_src) < scalar(@{$args{src}}) ) { push @cutoff_src, 0.0; }
+            while ( scalar(@cutoff_src) < $n ) { push @cutoff_src, 0.0; }
         }
 
-        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : ();
+        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : map { 0; } 1..$n;
         my $q_depth = ( exists $args{mod_q}->{depth} ) ? $args{mod_q}->{depth} : 1.0;
 
-        if ( scalar(@q_src) < scalar(@{$args{src}}) ) {
+        if ( scalar(@q_src) < $n ) {
             warn 'Q modulation source is shorter than input.';
-            while ( scalar(@q_src) < scalar(@{$args{src}}) ) { push @q_src, 0.0; }
+            while ( scalar(@q_src) < $n ) { push @q_src, 0.0; }
         }
 
         my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );

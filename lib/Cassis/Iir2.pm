@@ -52,11 +52,11 @@ sub set_cutoff {
     my ( $self, $cutoff ) = @_;
 
     if ( $cutoff < $CUTOFF_MIN ) {
-        warn "cutoff is clipped. ($cutoff => $CUTOFF_MIN)";
+        warn "cutoff is clipped. ($cutoff -> $CUTOFF_MIN)";
         $cutoff = $CUTOFF_MIN;
     }
     elsif ( $CUTOFF_MAX < $cutoff ) {
-        warn "cutoff is clipped. ($cutoff => $CUTOFF_MAX)";
+        warn "cutoff is clipped. ($cutoff -> $CUTOFF_MAX)";
         $cutoff = $CUTOFF_MAX;
     }
 
@@ -71,7 +71,7 @@ sub set_q {
     my ( $self, $q ) = @_;
 
     if ( $q < $Q_MIN ) {
-        warn "q is clipped. ($q => $Q_MIN)";
+        warn "q is clipped. ($q -> $Q_MIN)";
         $q = $Q_MIN;
     }
 

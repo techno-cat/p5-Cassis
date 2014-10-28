@@ -9,15 +9,26 @@ sub new {
     if ( not exists $args{fs} ) { die 'fs parameter is required.'; }
     if ( $args{fs} <= 0 ) { die 'fs parameter must be greater than 0.'; }
 
-    bless {
+    my $ret = bless {
         fs   => $args{fs},
         t    => 0,
-        freq => ( exists $args{freq} ) ? $args{freq} : 1.0
+        freq => 1.0
     }, $class;
+
+    $ret->set_freq( $args{freq} ) if ( exists $args{freq} );
+
+    $ret;
 }
 
 sub set_freq {
-    $_[0]->{freq} = $_[1];
+    my ( $self, $freq ) = @_;
+
+    if ( $freq < 0.0 ) {
+        warn "freq is clipped. ($freq -> 0)";
+        $freq = 0.0;
+    }
+
+    $self->{freq} = $freq;
 }
 
 sub freq {
@@ -187,7 +198,7 @@ Cassis::Osc - Oscillator
     
     # Osillate with modulation.
     my $mod = Cassis::Osc::Pulse->new( fs => $fs, freq => 4.0 );
-    $dst = $osc->exec( num => 44100, mod_freq => {
+    my $dst = $osc->exec( num => 44100, mod_freq => {
         src => $mod->exec( num => 44100 ),
         depth => 0.25
     } );

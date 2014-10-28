@@ -183,6 +183,8 @@ Cassis::EG - Envelop Genarator
 
 =item new()
 
+"fs" is required, "fs" is sampling rate.
+
     #   Attack  Decay
     # <---------><->
     #           /\
@@ -194,7 +196,6 @@ Cassis::EG - Envelop Genarator
     # <-----------------------><---->
     #          Gate Time      Release
     
-    # "fs" is required.
     my $envelop = Cassis::EG->new(
         fs => 44100, # sampling-rate
         adsr => [

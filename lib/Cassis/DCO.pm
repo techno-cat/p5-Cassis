@@ -11,12 +11,16 @@ sub new {
     if ( not exists $args{fs} ) { die 'fs parameter is required.'; }
     if ( $args{fs} <= 0 ) { die 'fs parameter must be greater than 0.'; }
 
-    bless {
+    my $ret = bless {
         fs => $args{fs},
         t => 0.0,
-        pitch => ( exists $args{pitch} ) ? $args{pitch} : 4.0,
+        pitch => 4.0,
         tuning => $TUNING_A4 * (2.0 ** -4.0)
     }, $class;
+
+    $ret->set_pitch( $args{pitch} ) if ( exists $args{pitch} );
+
+    $ret;
 }
 
 sub set_pitch {

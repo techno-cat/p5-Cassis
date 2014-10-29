@@ -23,13 +23,13 @@ can_ok 'Cassis::EG', qw/new set_curve curve set_adsr adsr exec one_shot/;
     is_deeply $envelop->exec( num => 4 ), [ 0, 0, 0, 0 ], 'exec before on.';
 
     $envelop->set_curve( 1.0 );
-    $envelop->on();
-    is $envelop->hold(), 1, 'hold after on.';
+
+    $envelop->trigger( gatetime => 10 );
+    is $envelop->hold(), 1, 'in gatetime.';
     is_deeply $envelop->exec( num => 4 ), [ 0.0, 0.25, 0.5, 0.75 ], 'in attack.';
     is_deeply $envelop->exec( num => 2 ), [ 1.0, 0.75 ], 'in decay.';
     is_deeply $envelop->exec( num => 4 ), [ 0.5, 0.5, 0.5, 0.5 ], 'in hold.';
-    $envelop->off();
-    is $envelop->hold(), 0, 'hold after off.';
+    is $envelop->hold(), 0, 'out of gatetime.';
     is_deeply $envelop->exec( num => 5 ), [ 0.5, 0.375, 0.25, 0.125, 0.0 ], 'in release.';
     is_deeply $envelop->exec( num => 2 ), [ 0.0, 0.0 ], 'out of duration.';
 }
@@ -58,10 +58,9 @@ can_ok 'Cassis::EG', qw/new set_curve curve set_adsr adsr exec one_shot/;
         adsr => [ 2, 4, 0.0, 3 ]
     );
 
-    $envelop->on();
+    $envelop->trigger( gatetime => 4 );
     is_deeply $envelop->exec( num => 2 ), [ 0.0, 0.5 ], 'in attack.';
     is_deeply $envelop->exec( num => 2 ), [ 1.0, 0.75 ], 'in decay.';
-    $envelop->off();
     is_deeply $envelop->exec( num => 4 ), [ 0.75, 0.5, 0.25, 0.0 ], 'note off in decay.';
 }
 

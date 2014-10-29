@@ -1,6 +1,7 @@
 package Cassis::EG;
 use strict;
 use warnings;
+use List::Util qw(min);
 
 sub new {
     my $class = shift;
@@ -10,11 +11,11 @@ sub new {
     if ( $args{fs} <= 0 ) { die 'fs parameter must be greater than 0.'; }
 
     my $ret = bless {
-        fs    => $args{fs},
-        t     => 0,
-        adsr  => [ 0.0, 0.0, 1.0, 0.0 ],
-        curve => 1.0,
-        hold  => 0,
+        fs       => $args{fs},
+        t        => 0,
+        adsr     => [ 0.0, 0.0, 1.0, 0.0 ],
+        curve    => 1.0,
+        gatetime => 0.0,
         last_value => 0.0
     }, $class;
 
@@ -85,41 +86,49 @@ sub exec {
         int( $self->{adsr}->[$_] * $self->{fs} );
     } ( 0, 1, 3 );
     my $sustain = $self->{adsr}->[2];
-    my @dst = ();
+    my $gatetime = int( $self->{gatetime} * $self->{fs} );
 
     my ( $t, $curve ) = ( $self->{t}, $self->{curve} );
-    if ( $self->{hold} ) {
+
+    my @dst = ();
+    my $n = min( $gatetime, $args{num} );
+    if ( $t < $gatetime ) {
 
         my $th = $attack;
-        while ( $t < $th and scalar(@dst) < $args{num} ) {
+        while ( $t < $th and scalar(@dst) < $n ) {
             my $wk = ($t / $attack) ** $curve;
             push @dst, $wk;
             $t++;
         }
 
         $th += $decay;
-        while ( $t < $th and scalar(@dst) < $args{num} ) {
+        while ( $t < $th and scalar(@dst) < $n ) {
             my $wk = (($t - $attack) / $decay) ** $curve;
             push @dst, (1.0 - ((1.0 - $sustain) * $wk));
             $t++;
         }
 
-        while ( scalar(@dst) < $args{num} ) {
+        while ( scalar(@dst) < $n ) {
             push @dst, $sustain;
+            $t++;
         }
 
         $self->{last_value} = $dst[-1] if ( @dst );
     }
-    else {
 
-        while ( $t < $release and scalar(@dst) < $args{num} ) {
-            my $wk = 1.0 - (($t / $release) ** $curve);
+    $n = $args{num};
+    if ( scalar(@dst) < $n ) {
+
+        my $th = $gatetime + $release;
+        while ( $t < $th and scalar(@dst) < $n ) {
+            my $wk = 1.0 - ((($t - $gatetime) / $release) ** $curve);
             push @dst, ($self->{last_value} * $wk);
             $t++;
         }
 
-        while ( scalar(@dst) < $args{num} ) {
+        while ( scalar(@dst) < $n ) {
             push @dst, 0.0;
+            $t++;
         }
     }
 
@@ -134,30 +143,34 @@ sub one_shot {
 
     if ( not exists $args{gatetime} ) { die 'gatetime parameter is required.'; }
 
+    $self->trigger( gatetime => $args{gatetime} );
+
     my $gatetime = int( $args{gatetime} * $self->{fs} );
     my $release = int( $self->{adsr}->[3] * $self->{fs} );
 
-    $self->on();
-    my $dst1 = $self->exec( num => $gatetime );
-    $self->off();
-    my $dst2 = $self->exec( num => $release + 1 );
-
-    push @{$dst1}, @{$dst2};
-    return $dst1;
+    return $self->exec( num => ($gatetime + $release + 1) );
 }
 
-sub on {
-    $_[0]->{t} = 0;
-    $_[0]->{hold} = 1;
-}
+sub trigger {
+    my $self = shift;
+    my %args = @_;
 
-sub off {
-    $_[0]->{t} = 0;
-    $_[0]->{hold} = 0;
+    if ( not exists $args{gatetime} ) {
+        warn 'gatetime parameter not exists.'
+    }
+
+    my $gatetime = ( exists $args{gatetime} ) ? $args{gatetime} : 0.0;
+    if ( $gatetime < 0.0 ) {
+        warn "gatetime is clipped. ($gatetime -> 0)";
+        $gatetime = 0.0;
+    }
+
+    ( $self->{t}, $self->{gatetime} ) = ( 0, $gatetime );
 }
 
 sub hold {
-    $_[0]->{hold};
+    my $self = shift;
+    ( $self->{t} < int($self->{gatetime} * $self->{fs}) ) ? 1 : 0;
 }
 
 1;

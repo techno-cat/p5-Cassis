@@ -40,8 +40,9 @@ sub set_freq {
     my ( $self, $freq ) = @_;
 
     if ( $freq <= 0.0 ) {
-        
-        
+        my $freq_min = $self->{tuning} * (2.0 ** -4.0);
+        warn "freq is clipped. ($freq -> $freq_min)";
+        $freq = $freq_min;
     }
 
     $self->set_pitch( log($freq / $self->{tuning}) / log(2.0) );

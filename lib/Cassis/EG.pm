@@ -204,7 +204,7 @@ Cassis::EG - Envelop Genarator
             1.0,     # Sustain: gain
             0.5      # Release: time(sec)
         ],
-        curve => 2.0 # default: exp^1(= 2.718...)
+        curve => 2.0 # default: 1.0 (= Linear)
     );
 
 =item set_adsr()

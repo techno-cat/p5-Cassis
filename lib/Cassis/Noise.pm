@@ -102,6 +102,9 @@ Cassis::Noise - Noise Genarator
 
 =item new()
 
+This module is not what is called "Noise Generator".
+Noise data by a random number from -1.0 to +1.0, will be prepared in advance.
+
     my $noise = Cassis::Noise->new();
     
     # When "speed" is less than 1.0, it will be sampling & hold.
@@ -148,7 +151,7 @@ If you want to use your noise, there is another way.
     # change like this.
     use Math::Random::NormalDistribution;
     local $Cassis::Noise::NOISE_FUNC = sub {
-        my $gen = rand_nd_generator( 3, 5 );
+        my $gen = rand_nd_generator( 0.0, 0.5 );
         my @noise = map { $gen->() } 1..50000;
     
         return \@noise;

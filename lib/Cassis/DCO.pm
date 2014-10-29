@@ -18,6 +18,11 @@ sub new {
         tuning => $TUNING_A4 * (2.0 ** -4.0)
     }, $class;
 
+    if ( exists $args{freq} and exists $args{pitch} ) {
+        warn 'Both of the "pitch" and "freq" argument exists.';
+    }
+
+    $ret->set_freq( $args{freq} ) if ( exists $args{freq} );
     $ret->set_pitch( $args{pitch} ) if ( exists $args{pitch} );
 
     $ret;
@@ -29,6 +34,22 @@ sub set_pitch {
 
 sub pitch {
     $_[0]->{pitch};
+}
+
+sub set_freq {
+    my ( $self, $freq ) = @_;
+
+    if ( $freq <= 0.0 ) {
+        
+        
+    }
+
+    $self->set_pitch( log($freq / $self->{tuning}) / log(2.0) );
+}
+
+sub freq {
+    my $self = shift;
+    $self->{tuning} * (2.0 ** $self->{pitch});
 }
 
 sub exec {

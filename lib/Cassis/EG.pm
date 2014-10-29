@@ -181,14 +181,14 @@ __END__
 
 =head1 NAME
 
-Cassis::EG - Envelop Genarator
+Cassis::EG - Envelope Genarator
 
 =head1 SYNOPSIS
 
     use Cassis::EG;
     
-    my $envelop = Cassis::EG->new( fs => 44100, adsr => [ 0.1, 0.2, 1.0, 0.5 ] );
-    my $dst = $envelop->exec( num => 44100 ); # 1sec
+    my $envelope = Cassis::EG->new( fs => 44100, adsr => [ 0.1, 0.2, 1.0, 0.5 ] );
+    my $dst = $envelope->exec( num => 44100 ); # 1sec
 
 =head1 DESCRIPTION
 
@@ -209,7 +209,7 @@ Cassis::EG - Envelop Genarator
     # <-----------------------><---->
     #          Gate Time      Release
     
-    my $envelop = Cassis::EG->new(
+    my $envelope = Cassis::EG->new(
         fs => 44100, # sampling-rate
         adsr => [
             0.1,     # Attack : time(sec)
@@ -229,7 +229,7 @@ Cassis::EG - Envelop Genarator
         0.8,    # Sustain      : ( 0.0 <= value )
         0.5     # Release(sec) : ( 0.0 <= value )
     ];
-    $envelop->set_adsr( $new_adsr );
+    $envelope->set_adsr( $new_adsr );
 
 =item adsr()
 
@@ -240,44 +240,44 @@ Cassis::EG - Envelop Genarator
 
     # Set curve.
     my $new_curve = 1.0; # ( 0.0 <= value )
-    $envelop->set_curve( $new_curve );
+    $envelope->set_curve( $new_curve );
 
 =item curve()
 
     # Get curve.
-    my $curve = $envelop->curve();
+    my $curve = $envelope->curve();
 
 =item on()
 
     # Like note on.
-    $envelop->on();
+    $envelope->on();
 
 =item off()
 
     # Like note off.
-    $envelop->off();
+    $envelope->off();
 
 =item hold()
 
-    my $envelop = Cassis::EG->new( ... );
-    $envelop->hold(); # => 0
-    $envelop->on();
-    $envelop->hold(); # => 1
-    $envelop->off();
-    $envelop->hold(); # => 0
+    my $envelope = Cassis::EG->new( ... );
+    $envelope->hold(); # => 0
+    $envelope->on();
+    $envelope->hold(); # => 1
+    $envelope->off();
+    $envelope->hold(); # => 0
 
 =item exec()
 
-    # Get envelop.
-    $envelop->on();
-    my $dst1 = $envelop->exec( num => 44100 );
-    $envelop->off();
-    my $dst2 = $envelop->exec( num => 44100 );
+    # Get envelope.
+    $envelope->on();
+    my $dst1 = $envelope->exec( num => 44100 );
+    $envelope->off();
+    my $dst2 = $envelope->exec( num => 44100 );
 
 =item one_shot()
 
-    # Get envelop for the duration.
-    my $dst = $envelop->one_shot(
+    # Get envelope for the duration.
+    my $dst = $envelope->one_shot(
         gatetime => 1.0 # time(sec)
     );
 

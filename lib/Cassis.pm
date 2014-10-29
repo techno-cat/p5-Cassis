@@ -97,7 +97,7 @@ Cassis::Amp - Amplifier Section.
 
 =item *
 
-Cassis::EG - Envelop Genarator.
+Cassis::EG - Envelope Genarator.
 
 =item *
 

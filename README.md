@@ -58,7 +58,7 @@ Cassis - Synthesizer Modules
 - Cassis::Osc - Oscillator.
 - Cassis::Noise - Noise Genarator.
 - Cassis::Amp - Amplifier Section.
-- Cassis::EG - Envelop Genarator.
+- Cassis::EG - Envelope Genarator.
 - Cassis::Iir2 - Second-order IIR digital filter.
 - Cassis::File - Wave File IO.
 

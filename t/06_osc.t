@@ -71,7 +71,6 @@ can_ok 'Cassis::Osc::Tri'  , 'oscillate';
         src => $osc2->exec( num => 8 ),
         depth => 0.5
     } );
-    print join(', ', @{$got}), "\n";
     is_deeply $got, [ -1, -1, +1, -1, -1, -1, +1, -1 ], 'with modulation.';
 }
 

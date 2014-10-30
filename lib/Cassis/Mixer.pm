@@ -8,16 +8,19 @@ sub mix {
 
     if ( scalar(@channels) == 0 ) { die 'Mixing source not exists.'; }
 
-    my $n = max( map {
-        scalar(@{$_->{src}});
-    } @channels );
+    my $n = 0;
+    foreach my $ch_idx ( 0..(scalar(@channels) - 1) ) {
+        my $ch = $channels[$ch_idx];
+
+        if ( not exists $ch->{src}    ) { die "src parameter not exists. (channel:$ch_idx)";    }
+        if ( not exists $ch->{volume} ) { die "volume parameter not exists. (channel:$ch_idx)"; }
+
+        $n = max( $n, scalar(@{$ch->{src}}) );
+    }
 
     my @dst = map { 0.0; } 0..($n - 1);
-
-    my $ch_idx = 0;
-    foreach my $ch ( @channels ) {
-        if ( not exists $ch->{src}    ) { die "src parameter not exists. (at $ch_idx)";    }
-        if ( not exists $ch->{volume} ) { die "volume parameter not exists. (at $ch_idx)"; }
+    foreach my $ch_idx ( 0..(scalar(@channels) - 1) ) {
+        my $ch = $channels[$ch_idx];
 
         my $vol = $ch->{volume};
         my @src = map {
@@ -25,15 +28,13 @@ sub mix {
         } @{$ch->{src}};
 
         if ( scalar(@src) < $n ) {
-            warn "source is shorter than other. (at $ch_idx)";
+            warn "source is shorter than other. (channel:$ch_idx)";
         }
 
         my $i = 0;
         foreach ( @src ) {
             $dst[$i++] += $_;
         }
-
-        $ch_idx++;
     }
 
     return \@dst;

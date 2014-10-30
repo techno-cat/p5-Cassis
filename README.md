@@ -49,7 +49,7 @@ Cassis - Synthesizer Modules
 
 # DESCRIPTION
 
-    Modules for generating a short sound.
+    Synthesizer Modules for generating a short sound.
 
 ## Overview of documentation
 
@@ -57,6 +57,7 @@ Cassis - Synthesizer Modules
 - Cassis::DCO - Digital Controlled Oscillator.
 - Cassis::Osc - Oscillator.
 - Cassis::Noise - Noise Genarator.
+- Cassis::Mixer - Mixer Section.
 - Cassis::Amp - Amplifier Section.
 - Cassis::EG - Envelope Genarator.
 - Cassis::Iir2 - Second-order IIR digital filter.

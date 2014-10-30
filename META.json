@@ -42,6 +42,7 @@
       },
       "runtime" : {
          "requires" : {
+            "List::Util" : "0",
             "perl" : "5.008001"
          }
       },

@@ -70,7 +70,7 @@ Cassis - Synthesizer Modules
 
 =head1 DESCRIPTION
 
-    Modules for generating a short sound.
+    Synthesizer Modules for generating a short sound.
 
 =head2 Overview of documentation
 

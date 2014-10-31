@@ -32,18 +32,66 @@ sub exec {
 
     if ( not exists $args{src} ) { die 'src parameter is required.'; }
 
-    my $params = $self->params();
-    my ( $b0, $b1, $b2, $a1, $a2 ) = map { $params->{$_}; } qw(b0 b1 b2 a1 a2);
+    my @dst = ();
+    if ( exists $args{mod_cutoff} or exists $args{mod_q} ) {
+        my $n = scalar(@{$args{src}});
 
-    my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
-    my @dst = map {
-        my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
-        my $ret = ($z_m2 * $b2) + ($z_m1 * $b1) + ($in * $b0);
-        ( $z_m2, $z_m1 ) = ( $z_m1, $in );
-        $ret;
-    } @{$args{src}};
+        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : map { 0; } 1..$n;
+        my $cutoff_depth = ( exists $args{mod_cutoff}->{depth} ) ? $args{mod_cutoff}->{depth} : 1.0;
 
-    ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
+        if ( scalar(@cutoff_src) < $n ) {
+            warn 'Cutoff modulation source is shorter than input.';
+            while ( scalar(@cutoff_src) < $n ) { push @cutoff_src, 0.0; }
+        }
+
+        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : map { 0; } 1..$n;
+        my $q_depth = ( exists $args{mod_q}->{depth} ) ? $args{mod_q}->{depth} : 1.0;
+
+        if ( scalar(@q_src) < $n ) {
+            warn 'Q modulation source is shorter than input.';
+            while ( scalar(@q_src) < $n ) { push @q_src, 0.0; }
+        }
+
+        my @wk = map {
+            my $cutoff = $self->{cutoff} + ($cutoff_src[$_] * $cutoff_depth);
+            $cutoff = ( $cutoff < $CUTOFF_MIN ) ? $CUTOFF_MIN : (($CUTOFF_MAX < $cutoff) ? $CUTOFF_MAX : $cutoff);
+            my $q = $self->{q} + ($q_src[$_] * $q_depth);
+            $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
+
+            [ $cutoff, $q ];
+        } 0..($n - 1);
+
+        my $params_list = $self->_calc_params( \@wk );
+        my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
+        my $src = $args{src};
+        @dst = map {
+            my $params = $params_list->[$_];
+            my ( $b0, $b1, $b2, $a1, $a2 ) = map { $params->{$_}; } qw(b0 b1 b2 a1 a2);
+
+            my $in = $src->[$_] - (($a1 * $z_m1) + ($a2 * $z_m2));
+            my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
+            ( $z_m2, $z_m1 ) = ( $z_m1, $in );
+            $ret;
+        } 0..($n - 1);
+
+        ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
+
+        return \@dst;
+    }
+    else {
+        my $params = $self->params();
+        my ( $b0, $b1, $b2, $a1, $a2 ) = map { $params->{$_}; } qw(b0 b1 b2 a1 a2);
+
+        my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
+        @dst = map {
+            my $in = $_ - (($a1 * $z_m1) + ($a2 * $z_m2));
+            my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
+            ( $z_m2, $z_m1 ) = ( $z_m1, $in );
+            $ret;
+        } @{$args{src}};
+
+        ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
+    }
 
     return \@dst;
 }
@@ -83,6 +131,16 @@ sub q {
 }
 
 sub params {
+    my $self = shift;
+
+    return $self->_calc_params(
+        [
+            [ $self->{cutoff}, $self->{q} ]
+        ]
+    )->[0];
+}
+
+sub _calc_params {
     die 'Must be override.';
 }
 
@@ -90,330 +148,112 @@ package Cassis::Iir2::LPF;
 use Math::Trig qw(pi tan);
 our @ISA = qw( Cassis::Iir2 );
 
-sub exec {
+sub _calc_params {
     my $self = shift;
-    my %args = @_;
+    my $args = shift;
 
-    if ( not exists $args{src} ) { die 'src parameter is required.'; }
+    my @ret = map {
+        my ( $cutoff, $q ) = @{$_};
 
-    if ( exists $args{mod_cutoff} or exists $args{mod_q} ) {
-        my $n = scalar(@{$args{src}});
+        my $fc = tan(pi * $cutoff) / (2.0 * pi);
+        my $_2_pi_fc = 2.0 * pi * $fc;
+        my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
+        my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
 
-        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : map { 0; } 1..$n;
-        my $cutoff_depth = ( exists $args{mod_cutoff}->{depth} ) ? $args{mod_cutoff}->{depth} : 1.0;
+        +{
+            b0 => $_4_pi_pi_fc_fc / $d,
+            b1 => (2.0 * $_4_pi_pi_fc_fc) / $d,
+            b2 => $_4_pi_pi_fc_fc / $d,
+            a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
+        };
+    } @{$args};
 
-        if ( scalar(@cutoff_src) < $n ) {
-            warn 'Cutoff modulation source is shorter than input.';
-            while ( scalar(@cutoff_src) < $n ) { push @cutoff_src, 0.0; }
-        }
-
-        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : map { 0; } 1..$n;
-        my $q_depth = ( exists $args{mod_q}->{depth} ) ? $args{mod_q}->{depth} : 1.0;
-
-        if ( scalar(@q_src) < $n ) {
-            warn 'Q modulation source is shorter than input.';
-            while ( scalar(@q_src) < $n ) { push @q_src, 0.0; }
-        }
-
-        my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
-        my @dst = map {
-            my $cutoff = $self->{cutoff} + ((shift @cutoff_src) * $cutoff_depth);
-            $cutoff = ( $cutoff < $CUTOFF_MIN ) ? $CUTOFF_MIN : (($CUTOFF_MAX < $cutoff) ? $CUTOFF_MAX : $cutoff);
-            my $q = $self->{q} + ((shift @q_src) * $q_depth);
-            $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
-
-            my $fc = tan(pi * $cutoff) / (2.0 * pi);
-            my $_2_pi_fc = 2.0 * pi * $fc;
-            my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
-            my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
-
-            my $b = $_4_pi_pi_fc_fc / $d;
-            #my $b0 = $_4_pi_pi_fc_fc / $d;
-            #my $b1 = (2.0 * $_4_pi_pi_fc_fc) / $d;
-            #my $b2 = $_4_pi_pi_fc_fc / $d;
-            my $a1 = ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d;
-            my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
-
-            my $in = $_ - (($a1 * $z_m1) + ($a2 * $z_m2));
-            #my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
-            my $ret = $b * ($in + (2.0 * $z_m1) + $z_m2);
-            ( $z_m2, $z_m1 ) = ( $z_m1, $in );
-
-            $ret;
-        } @{$args{src}};
-
-        ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
-
-        return \@dst;
-    }
-    else {
-        return $self->SUPER::exec( %args );
-    }
-}
-
-sub params {
-    my $self = shift;
-    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
-
-    my $fc = tan(pi * $cutoff) / (2.0 * pi);
-    my $_2_pi_fc = 2.0 * pi * $fc;
-    my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
-    my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
-
-    return {
-        b0 => $_4_pi_pi_fc_fc / $d,
-        b1 => (2.0 * $_4_pi_pi_fc_fc) / $d,
-        b2 => $_4_pi_pi_fc_fc / $d,
-        a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-        a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
-    };
+    return \@ret;
 }
 
 package Cassis::Iir2::HPF;
 use Math::Trig qw(pi tan);
 our @ISA = qw( Cassis::Iir2 );
 
-sub exec {
+sub _calc_params {
     my $self = shift;
-    my %args = @_;
+    my $args = shift;
 
-    if ( not exists $args{src} ) { die 'src parameter is required.'; }
+    my @ret = map {
+        my ( $cutoff, $q ) = @{$_};
 
-    if ( exists $args{mod_cutoff} or exists $args{mod_q} ) {
-        my $n = scalar(@{$args{src}});
+        my $fc = tan(pi * $cutoff) / (2.0 * pi);
+        my $_2_pi_fc = 2.0 * pi * $fc;
+        my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
+        my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
 
-        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : map { 0; } 1..$n;
-        my $cutoff_depth = ( exists $args{mod_cutoff}->{depth} ) ? $args{mod_cutoff}->{depth} : 1.0;
+        +{
+            b0 =>  1.0 / $d,
+            b1 => -2.0 / $d,
+            b2 =>  1.0 / $d,
+            a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
+        };
+    } @{$args};
 
-        if ( scalar(@cutoff_src) < $n ) {
-            warn 'Cutoff modulation source is shorter than input.';
-            while ( scalar(@cutoff_src) < $n ) { push @cutoff_src, 0.0; }
-        }
-
-        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : map { 0; } 1..$n;
-        my $q_depth = ( exists $args{mod_q}->{depth} ) ? $args{mod_q}->{depth} : 1.0;
-
-        if ( scalar(@q_src) < $n ) {
-            warn 'Q modulation source is shorter than input.';
-            while ( scalar(@q_src) < $n ) { push @q_src, 0.0; }
-        }
-
-        my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
-        my @dst = map {
-            my $cutoff = $self->{cutoff} + ((shift @cutoff_src) * $cutoff_depth);
-            $cutoff = ( $cutoff < $CUTOFF_MIN ) ? $CUTOFF_MIN : (($CUTOFF_MAX < $cutoff) ? $CUTOFF_MAX : $cutoff);
-            my $q = $self->{q} + ((shift @q_src) * $q_depth);
-            $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
-
-            my $fc = tan(pi * $cutoff) / (2.0 * pi);
-            my $_2_pi_fc = 2.0 * pi * $fc;
-            my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
-            my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
-
-            #my $b0 =  1.0 / $d;
-            #my $b1 = -2.0 / $d;
-            #my $b2 =  1.0 / $d;
-            my $a1 = ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d;
-            my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
-
-            my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
-            #my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
-            my $ret = ($in + (-2.0 * $z_m1) + $z_m2) / $d;
-            ( $z_m2, $z_m1 ) = ( $z_m1, $in );
-
-            $ret;
-        } @{$args{src}};
-
-        ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
-
-        return \@dst;
-    }
-    else {
-        return $self->SUPER::exec( %args );
-    }
-}
-
-sub params {
-    my $self = shift;
-    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
-
-    my $fc = tan(pi * $cutoff) / (2.0 * pi);
-    my $_2_pi_fc = 2.0 * pi * $fc;
-    my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
-    my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
-
-    return {
-        b0 =>  1.0 / $d,
-        b1 => -2.0 / $d,
-        b2 =>  1.0 / $d,
-        a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-        a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
-    };
+    return \@ret;
 }
 
 package Cassis::Iir2::BPF;
 use Math::Trig qw(pi tan);
 our @ISA = qw( Cassis::Iir2 );
 
-sub exec {
+sub _calc_params {
     my $self = shift;
-    my %args = @_;
+    my $args = shift;
 
-    if ( not exists $args{src} ) { die 'src parameter is required.'; }
+    my @ret = map {
+        my ( $cutoff, $q ) = @{$_};
 
-    if ( exists $args{mod_cutoff} or exists $args{mod_q} ) {
-        my $n = scalar(@{$args{src}});
+        my $fc = tan(pi * $cutoff) / (2.0 * pi);
+        my $_2_pi_fc = 2.0 * pi * $fc;
+        my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
+        my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
 
-        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : map { 0; } 1..$n;
-        my $cutoff_depth = ( exists $args{mod_cutoff}->{depth} ) ? $args{mod_cutoff}->{depth} : 1.0;
+        +{
+            b0 =>  ($_2_pi_fc / $q) / $d,
+            b1 => 0.0,
+            b2 => -($_2_pi_fc / $q) / $d,
+            a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
+        };
+    } @{$args};
 
-        if ( scalar(@cutoff_src) < $n ) {
-            warn 'Cutoff modulation source is shorter than input.';
-            while ( scalar(@cutoff_src) < $n ) { push @cutoff_src, 0.0; }
-        }
-
-        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : map { 0; } 1..$n;
-        my $q_depth = ( exists $args{mod_q}->{depth} ) ? $args{mod_q}->{depth} : 1.0;
-
-        if ( scalar(@q_src) < $n ) {
-            warn 'Q modulation source is shorter than input.';
-            while ( scalar(@q_src) < $n ) { push @q_src, 0.0; }
-        }
-
-        my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
-        my @dst = map {
-            my $cutoff = $self->{cutoff} + ((shift @cutoff_src) * $cutoff_depth);
-            $cutoff = ( $cutoff < $CUTOFF_MIN ) ? $CUTOFF_MIN : (($CUTOFF_MAX < $cutoff) ? $CUTOFF_MAX : $cutoff);
-            my $q = $self->{q} + ((shift @q_src) * $q_depth);
-            $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
-
-            my $fc = tan(pi * $cutoff) / (2.0 * pi);
-            my $_2_pi_fc = 2.0 * pi * $fc;
-            my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
-            my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
-
-            my $b = ($_2_pi_fc / $q) / $d;
-            #my $b0 =  ($_2_pi_fc / $q) / $d;
-            #my $b1 = 0.0;
-            #my $b2 = -($_2_pi_fc / $q) / $d;
-            my $a1 = ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d;
-            my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
-
-            my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
-            #my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
-            my $ret = $b * ($in - $z_m2);
-            ( $z_m2, $z_m1 ) = ( $z_m1, $in );
-
-            $ret;
-        } @{$args{src}};
-
-        ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
-
-        return \@dst;
-    }
-    else {
-        return $self->SUPER::exec( %args );
-    }
-}
-
-sub params {
-    my $self = shift;
-    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
-
-    my $fc = tan(pi * $cutoff) / (2.0 * pi);
-    my $_2_pi_fc = 2.0 * pi * $fc;
-    my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
-    my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
-
-    return {
-        b0 =>  ($_2_pi_fc / $q) / $d,
-        b1 => 0.0,
-        b2 => -($_2_pi_fc / $q) / $d,
-        a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-        a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
-    };
+    return \@ret;
 }
 
 package Cassis::Iir2::BEF;
 use Math::Trig qw(pi tan);
 our @ISA = qw( Cassis::Iir2 );
 
-sub exec {
+sub _calc_params {
     my $self = shift;
-    my %args = @_;
+    my $args = shift;
 
-    if ( not exists $args{src} ) { die 'src parameter is required.'; }
+    my @ret = map {
+        my ( $cutoff, $q ) = @{$_};
 
-    if ( exists $args{mod_cutoff} or exists $args{mod_q} ) {
-        my $n = scalar(@{$args{src}});
+        my $fc = tan(pi * $cutoff) / (2.0 * pi);
+        my $_2_pi_fc = 2.0 * pi * $fc;
+        my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
+        my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
 
-        my @cutoff_src = ( exists $args{mod_cutoff}->{src} ) ? @{$args{mod_cutoff}->{src}} : map { 0; } 1..$n;
-        my $cutoff_depth = ( exists $args{mod_cutoff}->{depth} ) ? $args{mod_cutoff}->{depth} : 1.0;
+        +{
+            b0 => ($_4_pi_pi_fc_fc + 1.0) / $d,
+            b1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            b2 => ($_4_pi_pi_fc_fc + 1.0) / $d,
+            a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
+        };
+    } @{$args};
 
-        if ( scalar(@cutoff_src) < $n ) {
-            warn 'Cutoff modulation source is shorter than input.';
-            while ( scalar(@cutoff_src) < $n ) { push @cutoff_src, 0.0; }
-        }
-
-        my @q_src = ( exists $args{mod_q}->{src} ) ? @{$args{mod_q}->{src}} : map { 0; } 1..$n;
-        my $q_depth = ( exists $args{mod_q}->{depth} ) ? $args{mod_q}->{depth} : 1.0;
-
-        if ( scalar(@q_src) < $n ) {
-            warn 'Q modulation source is shorter than input.';
-            while ( scalar(@q_src) < $n ) { push @q_src, 0.0; }
-        }
-
-        my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
-        my @dst = map {
-            my $cutoff = $self->{cutoff} + ((shift @cutoff_src) * $cutoff_depth);
-            $cutoff = ( $cutoff < $CUTOFF_MIN ) ? $CUTOFF_MIN : (($CUTOFF_MAX < $cutoff) ? $CUTOFF_MAX : $cutoff);
-            my $q = $self->{q} + ((shift @q_src) * $q_depth);
-            $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
-
-            my $fc = tan(pi * $cutoff) / (2.0 * pi);
-            my $_2_pi_fc = 2.0 * pi * $fc;
-            my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
-            my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
-
-            my $b0 = ($_4_pi_pi_fc_fc + 1.0) / $d;
-            my $b1 = ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d;
-            #my $b2 = ($_4_pi_pi_fc_fc + 1.0) / $d;
-            my $a1 = ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d;
-            my $a2 = (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d;
-
-            my $in = $_ - (($z_m2 * $a2) + ($z_m1 * $a1));
-            #my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
-            my $ret = ($b0 * ($in + $z_m2)) + ($b1 * $z_m1);
-            ( $z_m2, $z_m1 ) = ( $z_m1, $in );
-
-            $ret;
-        } @{$args{src}};
-
-        ( $self->{z_m1}, $self->{z_m2} ) = ( $z_m1, $z_m2 );
-
-        return \@dst;
-    }
-    else {
-        return $self->SUPER::exec( %args );
-    }
-}
-
-sub params {
-    my $self = shift;
-    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
-
-    my $fc = tan(pi * $cutoff) / (2.0 * pi);
-    my $_2_pi_fc = 2.0 * pi * $fc;
-    my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
-    my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
-
-    return {
-        b0 => ($_4_pi_pi_fc_fc + 1.0) / $d,
-        b1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-        b2 => ($_4_pi_pi_fc_fc + 1.0) / $d,
-        a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-        a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
-    };
+    return \@ret;
 }
 
 1;

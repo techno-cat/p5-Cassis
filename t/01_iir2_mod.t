@@ -1,6 +1,5 @@
 use strict;
 use Test::More 0.98;
-use List::Util qw(sum);
 
 use_ok $_ for qw(
     Cassis::Iir2
@@ -12,7 +11,6 @@ my @src = map { 64 < ($_ % 128) ? -1.0 : 1.0; } 0..511;
 
 my $cutoff = 0.05;
 my $q = 1.0 / sqrt(2.0);
-my $th = 1.0e-10;
 {
     my $expected = Cassis::Iir2::LPF->new( cutoff => $cutoff, q => $q )->exec(
         src => \@src
@@ -23,7 +21,7 @@ my $th = 1.0e-10;
         mod_q => {}
     );
 
-    ok( diff_total($got, $expected) < $th, "LPF with modulation" );
+    is_deeply $got, $expected, "LPF with modulation";
 }
 
 {
@@ -36,7 +34,7 @@ my $th = 1.0e-10;
         mod_q => {}
     );
 
-    ok( diff_total($got, $expected) < $th, "HPF with modulation" );
+    is_deeply $got, $expected, "HPF with modulation";
 }
 
 {
@@ -49,7 +47,7 @@ my $th = 1.0e-10;
         mod_q => {}
     );
 
-    ok( diff_total($got, $expected) < $th, "BPF with modulation" );
+    is_deeply $got, $expected, "BPF with modulation";
 }
 
 {
@@ -62,16 +60,7 @@ my $th = 1.0e-10;
         mod_q => {}
     );
 
-    ok( diff_total($got, $expected) < $th, "BEF with modulation" );
-}
-
-sub diff_total {
-    my ( $array1, $arrey2 ) = @_;
-
-    my $n = scalar @{$array1};
-    return sum( map {
-        abs($array1->[$_] - $arrey2->[$_]);
-    } 0..($n - 1) ); 
+    is_deeply $got, $expected, "BEF with modulation";
 }
 
 done_testing;

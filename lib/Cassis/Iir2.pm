@@ -65,8 +65,7 @@ sub exec {
         my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
         my $src = $args{src};
         @dst = map {
-            my $params = $params_list->[$_];
-            my ( $b0, $b1, $b2, $a1, $a2 ) = map { $params->{$_}; } qw(b0 b1 b2 a1 a2);
+            my ( $b0, $b1, $b2, $a1, $a2 ) = @{$params_list->[$_]};
 
             my $in = $src->[$_] - (($a1 * $z_m1) + ($a2 * $z_m2));
             my $ret = ($b0 * $in) + ($b1 * $z_m1) + ($b2 * $z_m2);
@@ -80,7 +79,7 @@ sub exec {
     }
     else {
         my $params = $self->params();
-        my ( $b0, $b1, $b2, $a1, $a2 ) = map { $params->{$_}; } qw(b0 b1 b2 a1 a2);
+        my ( $b0, $b1, $b2, $a1, $a2 ) = map { $params->{$_} } qw(b0 b1 b2 a1 a2);
 
         my ( $z_m1, $z_m2 ) = ( $self->{z_m1}, $self->{z_m2} );
         @dst = map {
@@ -133,11 +132,19 @@ sub q {
 sub params {
     my $self = shift;
 
-    return $self->_calc_params(
+    my $tmp = $self->_calc_params(
         [
             [ $self->{cutoff}, $self->{q} ]
         ]
     )->[0];
+
+    return {
+        b0 => $tmp->[0],
+        b1 => $tmp->[1],
+        b2 => $tmp->[2],
+        a1 => $tmp->[3],
+        a2 => $tmp->[4]
+    };
 }
 
 sub _calc_params {
@@ -160,13 +167,13 @@ sub _calc_params {
         my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
         my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
 
-        +{
-            b0 => $_4_pi_pi_fc_fc / $d,
-            b1 => (2.0 * $_4_pi_pi_fc_fc) / $d,
-            b2 => $_4_pi_pi_fc_fc / $d,
-            a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-            a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
-        };
+        [
+            $_4_pi_pi_fc_fc / $d,
+            (2.0 * $_4_pi_pi_fc_fc) / $d,
+            $_4_pi_pi_fc_fc / $d,
+            ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
+        ];
     } @{$args};
 
     return \@ret;
@@ -188,13 +195,13 @@ sub _calc_params {
         my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
         my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
 
-        +{
-            b0 =>  1.0 / $d,
-            b1 => -2.0 / $d,
-            b2 =>  1.0 / $d,
-            a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-            a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
-        };
+        [
+             1.0 / $d,
+            -2.0 / $d,
+             1.0 / $d,
+            ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
+        ];
     } @{$args};
 
     return \@ret;
@@ -216,13 +223,13 @@ sub _calc_params {
         my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
         my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
 
-        +{
-            b0 =>  ($_2_pi_fc / $q) / $d,
-            b1 => 0.0,
-            b2 => -($_2_pi_fc / $q) / $d,
-            a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-            a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
-        };
+        [
+             ($_2_pi_fc / $q) / $d,
+            0.0,
+            -($_2_pi_fc / $q) / $d,
+            ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
+        ];
     } @{$args};
 
     return \@ret;
@@ -244,13 +251,13 @@ sub _calc_params {
         my $_4_pi_pi_fc_fc = $_2_pi_fc * $_2_pi_fc;
         my $d = 1.0 + ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc;
 
-        +{
-            b0 => ($_4_pi_pi_fc_fc + 1.0) / $d,
-            b1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-            b2 => ($_4_pi_pi_fc_fc + 1.0) / $d,
-            a1 => ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
-            a2 => (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
-        };
+        [
+            ($_4_pi_pi_fc_fc + 1.0) / $d,
+            ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            ($_4_pi_pi_fc_fc + 1.0) / $d,
+            ((2.0 * $_4_pi_pi_fc_fc) - 2.0) / $d,
+            (1.0 - ($_2_pi_fc / $q) + $_4_pi_pi_fc_fc) / $d
+        ];
     } @{$args};
 
     return \@ret;

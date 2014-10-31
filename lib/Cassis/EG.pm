@@ -14,7 +14,7 @@ sub new {
         fs       => $args{fs},
         t        => 0,
         adsr     => [ 0.0, 0.0, 1.0, 0.0 ],
-        curve    => 1.0,
+        curve    => 1.0 / exp(1.0),
         gatetime => 0.0,
         last_value => 0.0
     }, $class;
@@ -217,7 +217,7 @@ Cassis::EG - Envelope Genarator
             1.0,     # Sustain: gain
             0.5      # Release: time(sec)
         ],
-        curve => 2.0 # default: 1.0 (= Linear)
+        curve => 0.8 # default: 1.0 / exp(1.0)
     );
 
 =item set_adsr()

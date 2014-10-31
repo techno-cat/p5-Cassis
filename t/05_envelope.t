@@ -10,7 +10,7 @@ can_ok 'Cassis::EG', qw/new set_curve curve set_adsr adsr exec one_shot/;
 {
     my $envelope = Cassis::EG->new( fs => 1 );
 
-    is $envelope->curve(), 1.0, 'default value of curve.';
+    is $envelope->curve(), 1.0 / exp(1.0), 'default value of curve.';
     is_deeply $envelope->adsr(), [ 0, 0, 1, 0], 'default value of adsr.';
 
     $envelope->set_curve( 2.0 );

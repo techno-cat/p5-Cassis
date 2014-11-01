@@ -17,7 +17,8 @@ sub new {
         cutoff => 0.1,
         q => 1.0 / sqrt(2.0),
         z_m1 => 0.0,
-        z_m2 => 0.0
+        z_m2 => 0.0,
+        linear => ( exists $args{linear} ) ? $args{linear} : 0
     }, $class;
 
     $ret->set_cutoff( $args{cutoff} );
@@ -58,6 +59,7 @@ sub exec {
             my $q = $self->{q} + ($q_src[$_] * $q_depth);
             $q = ( $q < $Q_MIN ) ? $Q_MIN : $q;
 
+            $cutoff = (2.0 ** ($cutoff * 16.0)) / 512.0 if ( not $self->{linear} );
             [ $cutoff, $q ];
         } 0..($n - 1);
 
@@ -129,12 +131,19 @@ sub q {
     $_[0]->{q};
 }
 
+sub linear {
+    $_[0]->{linear};
+}
+
 sub params {
     my $self = shift;
 
+    my ( $cutoff, $q ) = ( $self->{cutoff}, $self->{q} );
+    $cutoff = (2.0 ** ($cutoff * 16.0)) / 512.0 if ( not $self->{linear} );
+
     my $tmp = $self->_calc_params(
         [
-            [ $self->{cutoff}, $self->{q} ]
+            [ $cutoff, $q ]
         ]
     )->[0];
 
@@ -305,8 +314,15 @@ Cassis::Iir2 - Second-order IIR digital filter
 =item new()
 
 "cutoff", "q" are required.
+"linear" property has been prepared for use as a digital filter.
+If value of "linear" != 1, return the non-linear results for "cutoff".
 
     my $f = Cassis::Iir2::LPF->new( cutoff => 0.1, q => 2.0 );
+    my $f = Cassis::Iir2::LPF->new(
+        cutoff => 0.1, # Cutoff parameter
+        q      => 2.0, # Q - Resonance
+        linear => 1    # default: 0 (= non-linear)
+    );
 
 =item set_cutoff()
 

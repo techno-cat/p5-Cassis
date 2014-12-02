@@ -96,7 +96,12 @@ Cassis::File - Wave File IO
 
 =head1 DESCRIPTION
 
-    now working...
+=head2 wite()
+
+    Cassis::File::write(
+        file => 'sin.wav', 
+        channels => [ \@samples ]
+    );
 
 =head1 LICENSE
 

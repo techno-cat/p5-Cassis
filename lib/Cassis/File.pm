@@ -66,7 +66,7 @@ sub write {
         }
         else {
             foreach my $sample (@{$samples_ref}) {
-                print $fh pack( 'c', int($sample * 127.0) );
+                print $fh pack( 'C', 128 + int($sample * 127.0) );
             }
         }
     }

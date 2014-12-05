@@ -247,39 +247,28 @@ Cassis::EG - Envelope Generator
     # Get curve.
     my $curve = $envelope->curve();
 
-=item on()
+=item exec()
 
-    # Like note on.
-    $envelope->on();
+    # Generate envelope.
+    my $dst = $envelope->exec( num => 44100 );
 
-=item off()
+=item one_shot()
 
-    # Like note off.
-    $envelope->off();
+    # Generate envelope for the duration.
+    my $dst = $envelope->one_shot(
+        gatetime => 1.0 # time(sec)
+    );
 
 =item hold()
 
     my $envelope = Cassis::EG->new( ... );
-    $envelope->hold(); # => 0
-    $envelope->on();
+
+    # In gate time
     $envelope->hold(); # => 1
-    $envelope->off();
+    $envelope->exec( num => ... );
+
+    # In release time
     $envelope->hold(); # => 0
-
-=item exec()
-
-    # Get envelope.
-    $envelope->on();
-    my $dst1 = $envelope->exec( num => 44100 );
-    $envelope->off();
-    my $dst2 = $envelope->exec( num => 44100 );
-
-=item one_shot()
-
-    # Get envelope for the duration.
-    my $dst = $envelope->one_shot(
-        gatetime => 1.0 # time(sec)
-    );
 
 =back
 

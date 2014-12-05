@@ -181,7 +181,7 @@ __END__
 
 =head1 NAME
 
-Cassis::EG - Envelope Genarator
+Cassis::EG - Envelope Generator
 
 =head1 SYNOPSIS
 

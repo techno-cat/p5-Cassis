@@ -4,7 +4,7 @@ use warnings;
 
 our $NOISE_FUNC = sub {
     srand( 2 );
-    my @noise = map { rand( 2.0 ) - 1.0; } 1..50000;
+    my @noise = map { rand(2.0) - 1.0; } 1..50000;
 
     return \@noise;
 };

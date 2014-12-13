@@ -63,7 +63,7 @@ sub write {
     }
     else {
         if ( $raw ) {
-            print $fh pack( 'c*', @{$samples_ref} );
+            print $fh pack( 'C*', @{$samples_ref} );
         }
         else {
             my @clipped_samples = map {

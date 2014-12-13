@@ -55,9 +55,10 @@ sub write {
             print $fh pack( 's*', @{$samples_ref} );
         }
         else {
-            foreach my $sample (@{$samples_ref}) {
-                print $fh pack( 's', int($sample * 32767.0) );
-            }
+            my @clipped_samples = map {
+                ( 1.0 < $_ ) ? 32767 : ( ($_ < -1.0) ? -32767 : int($_ * 32767.0) );
+            } @{$samples_ref};
+            print $fh pack( 's*', @clipped_samples );
         }
     }
     else {
@@ -65,9 +66,12 @@ sub write {
             print $fh pack( 'c*', @{$samples_ref} );
         }
         else {
-            foreach my $sample (@{$samples_ref}) {
-                print $fh pack( 'C', 128 + int($sample * 127.0) );
-            }
+            my @clipped_samples = map {
+                128 + $_;
+            } map {
+                ( 1.0 < $_ ) ? 127 : ( ($_ < -1.0) ? -127 : int($_ * 127.0) );
+            } @{$samples_ref};
+            print $fh pack( 'C*', @clipped_samples );
         }
     }
     close $fh;
